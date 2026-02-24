@@ -1,0 +1,97 @@
+{
+  "name": "achwm-api",
+  "description": "",
+  "version": "0.0.0",
+  "license": "MIT",
+  "keywords": [
+    "feathers"
+  ],
+  "contributors": [],
+  "bugs": {},
+  "main": "src",
+  "directories": {
+    "lib": "src",
+    "test": "test/",
+    "config": "config/"
+  },
+  "engines": {
+    "node": ">= 22.14.0",
+    "yarn": ">= 0.18.0"
+  },
+  "scripts": {
+    "test": "yarn run lint && yarn run compile && yarn run mocha",
+    "lint": "eslint src/. test/. --config .eslintrc.json --ext .ts --fix",
+    "dev": "nodemon --ext .ts --exec \"node --inspect=0.0.0.0:9229 --require ts-node/register src/index.ts\"",
+    "start": "yarn run compile --project tsconfig.build.json && node lib/",
+    "mocha": "npx mocha --inspect=0.0.0.0:9229 --require ts-node/register --require source-map-support/register \"test/**/*.ts\" test/ --recursive --exit || echo",
+    "compile": "shx rm -rf lib/ && tsc",
+    "db:migrate": "npx sequelize db:migrate --migrations-path ./src/migrations --url postgresql://$POSTGRES_USER:$POSTGRES_PASSWORD@$POSTGRES_HOST/$POSTGRES_DB",
+    "db:migrate:status": "npx sequelize db:migrate:status --migrations-path ./src/migrations --url postgresql://$POSTGRES_USER:$POSTGRES_PASSWORD@$POSTGRES_HOST/$POSTGRES_DB",
+    "db:migrate:undo": "npx sequelize db:migrate:undo --migrations-path ./src/migrations --url postgresql://$POSTGRES_USER:$POSTGRES_PASSWORD@$POSTGRES_HOST/$POSTGRES_DB",
+    "db:migrate:undo:all": "npx sequelize db:migrate:undo:all --migrations-path ./src/migrations --url postgresql://$POSTGRES_USER:$POSTGRES_PASSWORD@$POSTGRES_HOST/$POSTGRES_DB",
+    "db:migrate:create": "npx sequelize migration:generate --migrations-path ./src/migrations"
+  },
+  "standard": {
+    "env": [
+      "mocha"
+    ],
+    "ignore": []
+  },
+  "types": "lib/",
+  "dependencies": {
+    "@feathersjs/authentication": "^5.0.29",
+    "@feathersjs/authentication-local": "^5.0.29",
+    "@feathersjs/authentication-oauth": "^5.0.29",
+    "@feathersjs/configuration": "^5.0.29",
+    "@feathersjs/errors": "^5.0.29",
+    "@feathersjs/express": "^5.0.29",
+    "@feathersjs/feathers": "^5.0.29",
+    "@feathersjs/socketio": "^5.0.29",
+    "@types/mjml": "^4.7.4",
+    "axios": "^1.7.5",
+    "bcryptjs": "^3.0.2",
+    "bluebird": "^3.7.2",
+    "compression": "^1.7.4",
+    "datejs": "^1.0.0-rc3",
+    "dayjs": "^1.11.13",
+    "feathers-authentication-management": "^5.1.0",
+    "feathers-hooks-common": "^8.2.1",
+    "feathers-sequelize": "^7.0.3",
+    "helmet": "^7.1.0",
+    "lodash": "^4.17.21",
+    "mjml": "^4.15.3",
+    "moment": "^2.30.1",
+    "nodemailer": "^6.9.15",
+    "nodemon": "^3.1.4",
+    "pg": "^8.7.3",
+    "qrcode": "^1.5.4",
+    "sequelize": "^6.19.0",
+    "sequelize-cli": "^6.6.2",
+    "serve-favicon": "^2.5.0",
+    "uuid": "^10.0.0",
+    "winston": "3.14.2",
+    "winston-daily-rotate-file": "^5.0.0"
+  },
+  "devDependencies": {
+    "@types/assert": "^1.5.10",
+    "@types/axios": "^0.14.0",
+    "@types/bluebird": "^3.5.42",
+    "@types/compression": "^1.7.5",
+    "@types/lodash": "^4.17.7",
+    "@types/mocha": "^10.0.7",
+    "@types/moment": "^2.13.0",
+    "@types/node": "^22.5.0",
+    "@types/serve-favicon": "^2.5.7",
+    "@types/uuid": "^10.0.0",
+    "@typescript-eslint/eslint-plugin": "^7.15.0",
+    "@typescript-eslint/parser": "^7.15.0",
+    "eslint": "^8.17.0",
+    "eslint-import-resolver-typescript": "^3.6.3",
+    "eslint-plugin-import": "^2.30.0",
+    "eslint-plugin-unused-imports": "^4.1.3",
+    "mocha": "^10.6.0",
+    "shx": "^0.3.4",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.5.3"
+  }
+}
