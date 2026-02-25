@@ -7,7 +7,7 @@ WORKDIR /home/node
 COPY package.json yarn.lock ./
 
 # Install ALL dependencies (including devDependencies like typescript and shx)
-RUN yarn install --frozen-lockfile
+RUN yarn install
 
 # Copy the rest of the source code
 COPY . .
@@ -28,7 +28,7 @@ COPY package.json yarn.lock ./
 
 # Install ONLY production dependencies (ignores devDependencies)
 # This keeps the image tiny
-RUN yarn install --production --frozen-lockfile
+RUN yarn install --production
 
 # Copy the compiled /lib folder from the builder stage
 COPY --from=builder /home/node/lib ./lib
