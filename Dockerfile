@@ -1,50 +1,20 @@
-# --- Stage 1: Build Stage ---
-FROM node:22.14.0 AS builder
+FROM node:22.14.0
 
 WORKDIR /home/node
 
-# Copy package files
-COPY package.json yarn.lock ./
-
-# Install ALL dependencies (including devDependencies like typescript and shx)
+COPY --chown=node:node package.json yarn.lock /home/node/
+USER node
 RUN yarn install
 
-# Copy the rest of the source code
-COPY . .
+#ENV PORT=4001 UPLOAD_ROOT=/home/node/uploads FILEBEAT_ROOT=/home/node/uploads/filebeat_logs
+#ENV API_PORT=4001 APP_PORT=4002 TEST_PORT=4003
+#ENV SPA_BASE_URL=http://localhost:$APP_PORT API_BASE_URL=http://localhost:$API_PORT APP_BASE_URL=http://localhost:$APP_PORT DEBUG=achwm:* LOG_FORMAT=dev POSTGRES_DB=achwm POSTGRES_PORT=5432 POSTGRES_HOST=postgres POSTGRES_USER=achwm ENVIRONMENT=development NODE_ENV=development POSTGRES_PASSWORD=changeme CHOKIDAR_USEPOLLING=${CHOKIDAR_USEPOLLING:-false} AUDIT_LOGS_DIR=/home/node/log
+COPY --chown=node:node . /home/node
 
-# Compile the TypeScript code to the /lib folder
-RUN yarn run compile --project tsconfig.build.json
+VOLUME $UPLOAD_ROOT
+VOLUME $FILEBEAT_ROOT
 
-
-# --- Stage 2: Production Stage ---
-FROM node:22.14.0-slim
-
-# Set environment to production
-ENV NODE_ENV=production
-WORKDIR /home/node
-
-# Copy ONLY the package files first
-COPY package.json yarn.lock ./
-
-# Install ONLY production dependencies (ignores devDependencies)
-# This keeps the image tiny
-RUN yarn install --production
-
-# Copy the compiled /lib folder from the builder stage
-COPY --from=builder /home/node/lib ./lib
-# Copy config files (FeathersJS needs these at runtime)
-COPY --from=builder /home/node/config ./config
-
-# If you have migrations or other assets needed at runtime, copy them here:
-# COPY --from=builder /home/node/src/migrations ./src/migrations
-
-# Ensure the 'node' user owns the files
-RUN chown -R node:node /home/node
 USER node
+EXPOSE $PORT
 
-# Expose your app port
-EXPOSE 4001
-
-# Start the app directly from the compiled JS
-# We don't use "yarn start" here because we already compiled in the builder stage
-CMD [ "node", "lib/index.js" ]
+CMD [ "yarn", "run", "start" ]
