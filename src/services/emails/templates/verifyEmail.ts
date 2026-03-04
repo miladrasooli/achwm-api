@@ -1,11 +1,11 @@
-import mjml2html from 'mjml'
-import { EmailProps } from '.'
+import mjml2html from "mjml";
+import { EmailProps } from ".";
 
 const verifyEmail = (props: EmailProps) => {
-  const { actionUrl, unsubscribeUrl } = props
-  const APP_BASE_URL = process.env.APP_BASE_URL
+  const { actionUrl, unsubscribeUrl } = props;
+  const APP_BASE_URL = process.env.APP_BASE_URL;
 
-  const subject = 'ACHWM Verify Email'
+  const subject = "ACHWM Verify Email";
 
   const html = mjml2html(`
     <mjml>
@@ -41,8 +41,6 @@ const verifyEmail = (props: EmailProps) => {
               ACHWM team
             </mj-text>
             <mj-divider border-width="1px" border-style="solid" border-color="#383838" />
-
-            <mj-image src="${APP_BASE_URL}/emailLogo.svg" alt="ACHWM logo" href="${APP_BASE_URL}" target="_blank" height="5rem"/>
             <mj-text align="center" mj-class="xsmall">
               Aaniish Naa Gegii Children's Health and Wellness Measure
             </mj-text>
@@ -53,7 +51,7 @@ const verifyEmail = (props: EmailProps) => {
         </mj-section>
       </mj-body>
     </mjml>  
-  `).html
+  `).html;
 
   const text = `
     Hello!
@@ -68,13 +66,13 @@ const verifyEmail = (props: EmailProps) => {
     Aaniish Naa Gegii Children's Health and Wellness Measure
 
     Unsubscribe from ACHWM emails (${unsubscribeUrl})
-  `
+  `;
 
   return {
     html,
     text,
     subject,
-  }
-}
+  };
+};
 
-export default verifyEmail
+export default verifyEmail;

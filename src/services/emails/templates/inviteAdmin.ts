@@ -1,11 +1,11 @@
-import mjml2html from 'mjml'
-import { EmailProps } from '.'
+import mjml2html from "mjml";
+import { EmailProps } from ".";
 
 const inviteAdmin = (props: EmailProps & { communityName: string }) => {
-  const { actionUrl, communityName, unsubscribeUrl } = props
-  const APP_BASE_URL = process.env.APP_BASE_URL
+  const { actionUrl, communityName, unsubscribeUrl } = props;
+  const APP_BASE_URL = process.env.APP_BASE_URL;
 
-  const subject = 'ACHWM Invitation'
+  const subject = "ACHWM Invitation";
 
   const html = mjml2html(`
     <mjml>
@@ -40,7 +40,6 @@ const inviteAdmin = (props: EmailProps & { communityName: string }) => {
             </mj-button>
             <mj-divider border-width="1px" border-style="solid" border-color="#383838" />
 
-            <mj-image src="${APP_BASE_URL}/emailLogo.svg" alt="ACHWM logo" href="${APP_BASE_URL}" target="_blank" height="5rem"/>
             <mj-text align="center" mj-class="xsmall">
               Aaniish Naa Gegii Children's Health and Wellness Measure
             </mj-text>
@@ -51,7 +50,7 @@ const inviteAdmin = (props: EmailProps & { communityName: string }) => {
         </mj-section>
       </mj-body>
     </mjml>  
-  `).html
+  `).html;
 
   const text = `
     Accept Invitation (${actionUrl})
@@ -59,13 +58,13 @@ const inviteAdmin = (props: EmailProps & { communityName: string }) => {
     Aaniish Naa Gegii Children's Health and Wellness Measure
 
     Unsubscribe from ACHWM emails (${unsubscribeUrl})
-  `
+  `;
 
   return {
     html,
     text,
     subject,
-  }
-}
+  };
+};
 
-export default inviteAdmin
+export default inviteAdmin;

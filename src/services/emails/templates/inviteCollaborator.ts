@@ -1,11 +1,13 @@
-import mjml2html from 'mjml'
-import { EmailProps } from '.'
+import mjml2html from "mjml";
+import { EmailProps } from ".";
 
-const inviteCollaborator = (props: EmailProps & { projectName: string; projectRole: string }) => {
-  const { actionUrl, projectName, projectRole, unsubscribeUrl } = props
-  const APP_BASE_URL = process.env.APP_BASE_URL
+const inviteCollaborator = (
+  props: EmailProps & { projectName: string; projectRole: string },
+) => {
+  const { actionUrl, projectName, projectRole, unsubscribeUrl } = props;
+  const APP_BASE_URL = process.env.APP_BASE_URL;
 
-  const subject = 'ACHWM Invitation'
+  const subject = "ACHWM Invitation";
 
   const html = mjml2html(`
     <mjml>
@@ -30,7 +32,7 @@ const inviteCollaborator = (props: EmailProps & { projectName: string; projectRo
              You have been invited to be a ${projectRole} for the following ACHWM project: ${projectName}.
             </mj-text>
             <mj-text mj-class="medium">
-             Once your invitation is accepted, you will be able to administer ${projectRole === 'Clinician / Coordinator' ? 'and view ' : ''} surveys for this project.
+             Once your invitation is accepted, you will be able to administer ${projectRole === "Clinician / Coordinator" ? "and view " : ""} surveys for this project.
             </mj-text>
             <mj-text mj-class="medium">
               To accept your invitation, click the button below:
@@ -40,7 +42,6 @@ const inviteCollaborator = (props: EmailProps & { projectName: string; projectRo
             </mj-button>
             <mj-divider border-width="1px" border-style="solid" border-color="#383838" />
 
-            <mj-image src="${APP_BASE_URL}/emailLogo.svg" alt="ACHWM logo" href="${APP_BASE_URL}" target="_blank" height="5rem"/>
             <mj-text align="center" mj-class="xsmall">
               Aaniish Naa Gegii Children's Health and Wellness Measure
             </mj-text>
@@ -51,7 +52,7 @@ const inviteCollaborator = (props: EmailProps & { projectName: string; projectRo
         </mj-section>
       </mj-body>
     </mjml>  
-  `).html
+  `).html;
 
   const text = `
     Accept Invitation (${actionUrl})
@@ -59,13 +60,13 @@ const inviteCollaborator = (props: EmailProps & { projectName: string; projectRo
     Aaniish Naa Gegii Children's Health and Wellness Measure
 
     Unsubscribe from ACHWM emails (${unsubscribeUrl})
-  `
+  `;
 
   return {
     html,
     text,
     subject,
-  }
-}
+  };
+};
 
-export default inviteCollaborator
+export default inviteCollaborator;

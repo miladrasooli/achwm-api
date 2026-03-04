@@ -1,15 +1,15 @@
-import mjml2html from 'mjml'
-import { EmailProps } from '.'
+import mjml2html from "mjml";
+import { EmailProps } from ".";
 
 type RequestInviteProps = {
-  requestorEmail: string
-} & EmailProps
+  requestorEmail: string;
+} & EmailProps;
 
 const requestInvite = (props: RequestInviteProps) => {
-  const { requestorEmail, actionUrl, unsubscribeUrl } = props
-  const APP_BASE_URL = process.env.APP_BASE_URL
+  const { requestorEmail, actionUrl, unsubscribeUrl } = props;
+  const APP_BASE_URL = process.env.APP_BASE_URL;
 
-  const subject = 'ACHWM Request Invitation'
+  const subject = "ACHWM Request Invitation";
 
   const html = mjml2html(`
     <mjml>
@@ -40,7 +40,6 @@ const requestInvite = (props: RequestInviteProps) => {
               Log In To ACHWM
             </mj-button>
             <mj-divider border-width="1px" border-style="solid" border-color="#383838" />
-            <mj-image src="${APP_BASE_URL}/emailLogo.svg" alt="ACHWM logo" href="${APP_BASE_URL}" target="_blank" height="5rem"/>
             <mj-text align="center" mj-class="xsmall">
               Aaniish Naa Gegii Children's Health and Wellness Measure
             </mj-text>
@@ -51,7 +50,7 @@ const requestInvite = (props: RequestInviteProps) => {
         </mj-section>
       </mj-body>
     </mjml>  
-  `).html
+  `).html;
 
   const text = `
     Hello!
@@ -65,13 +64,13 @@ const requestInvite = (props: RequestInviteProps) => {
     Aaniish Naa Gegii Children's Health and Wellness Measure
 
     Unsubscribe from ACHWM emails (${unsubscribeUrl})
-  `
+  `;
 
   return {
     html,
     text,
     subject,
-  }
-}
+  };
+};
 
-export default requestInvite
+export default requestInvite;
