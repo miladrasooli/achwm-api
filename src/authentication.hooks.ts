@@ -1,10 +1,22 @@
 // Authentication hooks
 import { iff, isProvider } from 'feathers-hooks-common'
+import { get } from 'lodash'
 
 import { HookContext, HookOptions } from './declarations'
-import { AccessLevelEnum } from './models/users.model'
+import { AccessLevelEnum, UserStatusEnum } from './models/users.model'
 
 import globalHooks from './hooks'
+import { Forbidden } from '@feathersjs/errors'
+
+const preventDeactivatedUsersFromLoggingIn = () => async (context: HookContext) => {
+  const isActive = get(context, 'result.user.active_status') === UserStatusEnum.ACTIVE
+
+  if (!isActive) {
+    throw new Forbidden('This user account has been deactivated')
+  }
+
+  return context
+}
 
 const updateAccessLevelAfterLogin = () => async (context: HookContext) => {
   const { app, result } = context
@@ -40,6 +52,7 @@ const hooks: HookOptions = {
       ),
     ],
     create: [
+      preventDeactivatedUsersFromLoggingIn(),
       updateAccessLevelAfterLogin(),
     ],
     remove: [],

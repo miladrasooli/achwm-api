@@ -163,7 +163,8 @@ const hooks: HookOptions<Users> = {
             'organization_name', 
             'organization_type', 
             'organization_title',
-            'is_superadmin'
+            'is_superadmin',
+            'active_status'
           ])
         ) as any
       ),

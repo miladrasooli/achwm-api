@@ -2,13 +2,15 @@ import * as feathersAuthentication from '@feathersjs/authentication'
 const { authenticate } = feathersAuthentication.hooks
 import { iff, isProvider, disallow, ValidatorFn, validate } from 'feathers-hooks-common'
 import { isVerified } from 'feathers-authentication-management'
+import { Paginated } from '@feathersjs/feathers'
+import { Forbidden } from '@feathersjs/errors'
 const QRCode = require('qrcode')
 
 import { HookContext, HookOptions } from '../../declarations'
 import { OfflineSessions } from './offline-sessions.class'
 import { EmailTypeEnum } from '../../models/emails.model'
 import { RoleEnum, UserProject } from '../../models/users-projects.model'
-import { Paginated } from '@feathersjs/feathers'
+import { ProjectStatusEnum } from '../../models/projects.model'
 
 import globalHooks from '../../hooks'
 
@@ -62,6 +64,18 @@ const offlineSessionsValidator: ValidatorFn = async (formValues, context) => {
   return null
 }
 
+const checkProjectStatus = () => async (context: HookContext) => {
+  const { app, data } = context
+
+  const { status } = await app.service('projects').get(data.project_id)
+
+  if (status === ProjectStatusEnum.INACTIVE) {
+    throw new Forbidden('Offline sessions cannot be created for inactive projects')
+  }
+
+  return context
+}
+
 // prettier-ignore
 const hooks: HookOptions<OfflineSessions> = {
   around: {
@@ -91,6 +105,7 @@ const hooks: HookOptions<OfflineSessions> = {
       iff(isProvider('external'),
         globalHooks.restrictToOwnProjects({minimumRole: RoleEnum.ADMIN})
       ),
+      checkProjectStatus(),
       validate(offlineSessionsValidator)
     ],
     update: [

@@ -20,7 +20,13 @@ const USER_FIELDS_COORDINATOR_AND_ABOVE = [
   'organization_title',
 ]
 
-const USER_FIELDS_SELF_ONLY = ['access_level', 'isVerified', 'is_subscribed_to_emails', 'is_superadmin']
+const USER_FIELDS_SELF_ONLY = [
+  'access_level',
+  'isVerified',
+  'is_subscribed_to_emails',
+  'is_superadmin',
+  'active_status',
+]
 
 const USER_FIELDS_SUPERADMIN_ONLY = ['created_at', 'last_login', 'how_did_you_hear_about_us', 'active_status']
 

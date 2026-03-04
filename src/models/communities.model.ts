@@ -31,7 +31,6 @@ export class Community extends Model<InferAttributes<Community>, InferCreationAt
   declare share_name: boolean
   declare contact_id: CreationOptional<typeof DataTypes.UUID>
   declare platform_license_document_link: CreationOptional<string>
-  declare data_stewardship_document_link: CreationOptional<string>
   declare redcap_server_id: CreationOptional<typeof DataTypes.UUID>
 }
 
@@ -54,7 +53,7 @@ export default function (app: Application): ModelStatic<Model> {
       allowNull: false,
     },
     license_expiry: {
-      type: DataTypes.DATEONLY,
+      type: DataTypes.DATE,
     },
     type: {
       type: DataTypes.STRING,
@@ -77,9 +76,6 @@ export default function (app: Application): ModelStatic<Model> {
       },
     },
     platform_license_document_link: {
-      type: DataTypes.STRING,
-    },
-    data_stewardship_document_link: {
       type: DataTypes.STRING,
     },
     redcap_server_id: {

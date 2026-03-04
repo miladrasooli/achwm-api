@@ -1,12 +1,12 @@
 import axios from 'axios'
 import dayjs from 'dayjs'
 import { get, omit } from 'lodash'
-import { v4 as uuidv4 } from 'uuid'
 
-import { BadRequest } from '@feathersjs/errors'
+import { BadRequest, Forbidden } from '@feathersjs/errors'
 
 import { Application } from '../../declarations'
 import { achwmToRedcap, getRedcapCredentials, HEADERS, Metadata, redcapToAchwm } from '../redcap/redcapUtils'
+import { ProjectStatusEnum } from '../../models/projects.model'
 
 type SurveyResponse = {
   [Metadata.PARTICIPANT_UUID]: string
@@ -107,12 +107,27 @@ export class SurveyResponses {
 
   async create(data: { project_id: string }) {
     let { project_id, ...surveyResponseData } = data
-    const { url, token } = await getRedcapCredentials(project_id, this.app)
+
+    if (!project_id) {
+      throw new BadRequest('project_id must be provided')
+    }
+
+    // Check if project is inactive
+    const { redcap_token, community_id, status } = await this.app.service('projects').get(project_id)
+
+    if (status === ProjectStatusEnum.INACTIVE) {
+      throw new Forbidden('This project is inactive')
+    }
+
+    // Get REDCap information
+    const { redcap_server_id } = await this.app.service('communities').get(community_id)
+    const { server_url } = await this.app.service('redcap-servers').get(redcap_server_id)
 
     // Add default values
     surveyResponseData = omit(
       {
-        [Metadata.RECORD_ID]: uuidv4(),
+        // Even though records are numbered automatically, record ID must still be provided
+        [Metadata.RECORD_ID]: Metadata.RECORD_ID,
         [Metadata.STATUS]: SurveyStatusEnum.IN_PROGRESS,
         [Metadata.PARTICIPANT_CONSENTED]: false,
         [Metadata.REVIEW_QUESTION_SHOWING]: false,
@@ -125,19 +140,19 @@ export class SurveyResponses {
     )
 
     // Process data to REDCap format
-    const newSurveyResponse = await achwmToRedcap(surveyResponseData, url, token)
+    const newSurveyResponse = await achwmToRedcap(surveyResponseData, server_url, redcap_token)
 
     // Create new record on REDCap server
     const newSurveyResponseId = (
       await axios.post(
-        url,
+        server_url,
         {
-          token,
+          token: redcap_token,
           content: 'record',
           action: 'import',
           format: 'json',
           overwriteBehavior: 'normal',
-          forceAutoNumber: 'false',
+          forceAutoNumber: 'true',
           returnContent: 'ids',
           returnFormat: 'json',
           data: JSON.stringify([newSurveyResponse]),
@@ -228,17 +243,19 @@ export class SurveyResponses {
       .filter((response: { [Metadata.DATASET_ID]: string }) => response[Metadata.DATASET_ID] === dataset_id)
       .map((response: { [Metadata.RECORD_ID]: string }) => response[Metadata.RECORD_ID])
 
-    // Remove those survey responses
-    await axios.post(
-      url,
-      {
-        token,
-        action: 'delete',
-        content: 'record',
-        records: recordIds,
-      },
-      HEADERS,
-    )
+    if (recordIds.length) {
+      // Remove those survey responses
+      await axios.post(
+        url,
+        {
+          token,
+          action: 'delete',
+          content: 'record',
+          records: recordIds,
+        },
+        HEADERS,
+      )
+    }
 
     return { status: 200 }
   }

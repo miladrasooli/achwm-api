@@ -169,7 +169,8 @@ export class Participants {
     // Process data to REDCap format
     const newParticipant = await achwmToRedcap(
       {
-        [Metadata.RECORD_ID]: uuidv4(),
+        // Even though records are numbered automatically, record ID must still be provided
+        [Metadata.RECORD_ID]: Metadata.RECORD_ID,
         [Metadata.PARTICIPANT_UUID]: uuidv4(),
         ...rest,
       },
@@ -202,6 +203,13 @@ export class Participants {
 
     const projectId = get(params, 'query.project_id')
     const { url, token } = await getRedcapCredentials(projectId, this.app)
+
+    // Make sure if participant ID is being patched, it is to an unused participant ID
+    if (data.hasOwnProperty(Metadata.PARTICIPANT_ID)) {
+      await this.app
+        .service('participant-uniqueness')
+        .patch(participant_uuid, { project_id: projectId, participant_id: data.participant_id })
+    }
 
     // Find records with this participant
     const allRecords = (

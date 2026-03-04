@@ -4,6 +4,7 @@ import { HookContext } from '../declarations'
 const SERVICES_TO_SKIP = [
   'mailer',
   'participants',
+  'participant-uniqueness',
   'promis',
   'raw-query',
   'report',

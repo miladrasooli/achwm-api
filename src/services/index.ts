@@ -11,6 +11,7 @@ import mailer from './mailer/mailer.service'
 import offlineData from './offline-data/offline-data.service'
 import offlineSessions from './offline-sessions/offline-sessions.service'
 import participants from './participants/participants.service'
+import participantUniqueness from './participant-uniqueness/participant-uniqueness.service'
 import projects from './projects/projects.service'
 import redcap from './redcap/redcap.service'
 import redcapServers from './redcap-servers/redcap-servers.service'
@@ -36,6 +37,7 @@ export default function (app: Application): void {
   app.configure(offlineData)
   app.configure(offlineSessions)
   app.configure(participants)
+  app.configure(participantUniqueness)
   app.configure(projects)
   app.configure(redcap)
   app.configure(redcapServers)

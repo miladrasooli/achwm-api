@@ -1,7 +1,10 @@
 const nodemailer = require('nodemailer')
 
 const MAIL_SERVICE = process.env.MAIL_SERVICE
-
+const USERNAME = process.env.SMTP_USERNAME
+const PASSWORD = process.env.SMTP_PASSWORD
+const HOST = process.env.SMTP_HOST
+const PORT = process.env.SMTP_PORT
 class ConsoleMailer {
   sendMail(data: Object) {
     console.log('Sending email to console.log:', JSON.stringify(data, null, 2))
@@ -31,6 +34,16 @@ export class Mailer {
 
       case 'mailhog':
         this.mailer = nodemailer.createTransport({ host: 'mailhog', port: 1025, secure: false })
+        break
+      case 'smtp':
+        this.mailer = nodemailer.createTransport({
+          host: HOST,
+          port: PORT,
+          secure: true,
+          debug: true,
+          logger: true,
+          auth: { user: USERNAME, pass: PASSWORD },
+        })
         break
 
       default:

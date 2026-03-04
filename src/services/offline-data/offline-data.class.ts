@@ -3,6 +3,12 @@ import dayjs from 'dayjs'
 import { Application } from '../../declarations'
 import { NotAuthenticated } from '@feathersjs/errors'
 import { OfflineSession } from '../../models/offline-sessions.model'
+import { Metadata } from '../redcap/redcapUtils'
+
+type ExtendedOfflineSession = OfflineSession & {
+  takenParticipantIds: string[]
+  takenParticipantUuids: string[]
+}
 
 export class OfflineData {
   app: Application
@@ -15,7 +21,7 @@ export class OfflineData {
     const { projectId, offlineSessionId } = data
 
     // Check that projectId and offlineSessionId correspond to each other
-    let offlineSession: OfflineSession
+    let offlineSession: ExtendedOfflineSession
     try {
       offlineSession = await this.app.service('offline-sessions').get(offlineSessionId)
       if (projectId !== offlineSession.project_id) {
@@ -50,6 +56,28 @@ export class OfflineData {
     const project = await this.app.service('projects').get(projectId)
 
     const scoringDictionary = await this.app.service('scoring-dictionaries').get(projectId)
+
+    // Get list of participant IDs and UUIDs that are currently in use in this community
+    const communityId = project.community_id
+    const projects = await this.app.service('projects').find({
+      query: {
+        community_id: communityId,
+      },
+      paginate: false,
+    })
+
+    const participantIds = []
+    const participantUuids = []
+
+    for (const project of projects) {
+      const participants = (await this.app.service('participants').find({ query: { project_id: project.id } })) as any[]
+
+      participantIds.push(...participants.map((p) => p[Metadata.PARTICIPANT_ID]))
+      participantUuids.push(...participants.map((p) => p[Metadata.PARTICIPANT_UUID]))
+    }
+
+    offlineSession.takenParticipantIds = participantIds
+    offlineSession.takenParticipantUuids = participantUuids
 
     return {
       offlineSession,

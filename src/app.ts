@@ -3,7 +3,7 @@ import express, { cors, errorHandler, json, notFound, rest, serveStatic, urlenco
 import { feathers } from '@feathersjs/feathers'
 import socketio from '@feathersjs/socketio'
 import compress from 'compression'
-import { NextFunction, Request, Response, RequestHandler } from 'express'
+import { NextFunction, Request, Response } from 'express'
 import fs from 'fs'
 import helmet from 'helmet'
 import maxBy from 'lodash/maxBy'
@@ -12,6 +12,7 @@ import path from 'path'
 import favicon from 'serve-favicon'
 import winston from 'winston'
 import DailyRotateFile from 'winston-daily-rotate-file'
+import multer from 'multer'
 
 import appHooks from './app.hooks'
 import authentication from './authentication'
@@ -140,6 +141,62 @@ app.configure(authentication)
 
 // Set up our services (see `services/index.ts`)
 app.configure(services)
+
+const bundleAgreementsDir = path.join(app.get('public'), 'bundle-agreements')
+
+try {
+  if (!fs.existsSync(bundleAgreementsDir)) {
+    fs.mkdirSync(bundleAgreementsDir, { recursive: true })
+  }
+} catch (error) {
+  logger.error('Failed to create bundle-agreements directory', error)
+}
+
+const bundleAgreementStorage = multer.diskStorage({
+  destination: bundleAgreementsDir,
+  filename: (_req, file, cb) => {
+    const timestamp = Date.now()
+    const random = Math.round(Math.random() * 1e9)
+    const baseName = `${timestamp}-${random}`
+
+    const filename = `${baseName}.pdf`
+
+    cb(null, filename)
+  },
+})
+
+const upload = multer({
+  storage: bundleAgreementStorage,
+  limits: { fileSize: 10 * 1024 * 1024 },
+  fileFilter: (req: Request, file: Express.Multer.File, cb: multer.FileFilterCallback) => {
+    if (file.mimetype !== 'application/pdf') {
+      return cb(new Error('Only PDF files are allowed'))
+    }
+
+    cb(null, true)
+  },
+})
+
+;(app as any).post('/bundle-agreements', upload.single('file'), (req: any, res: any) => {
+  if (!req.file) {
+    res.status(400).json({ message: 'No file uploaded' })
+    return
+  }
+
+  res.json({ filename: req.file.filename })
+})
+
+;(app as any).get('/bundle-agreements/:filename', (req: any, res: any) => {
+  const filePath = path.join(bundleAgreementsDir, req.params.filename)
+
+  if (!fs.existsSync(filePath)) {
+    res.status(404).json({ message: 'File not found' })
+    return
+  }
+
+  res.type('application/pdf')
+  fs.createReadStream(filePath).pipe(res)
+})
 // Set up event channels (see channels.js)
 app.configure(channels)
 

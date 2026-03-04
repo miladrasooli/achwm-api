@@ -1,29 +1,18 @@
-import dayjs from 'dayjs'
 import { uniq } from 'lodash'
 
 import { Forbidden } from '@feathersjs/errors'
 import * as feathersAuthentication from '@feathersjs/authentication'
 const { authenticate } = feathersAuthentication.hooks
-import { disallow, iff, isProvider } from 'feathers-hooks-common'
+import { iff, isProvider } from 'feathers-hooks-common'
 import { isVerified } from 'feathers-authentication-management'
 
 import { HookContext, HookOptions } from '../../declarations'
-import { SurveyResponses, SurveyStatusEnum } from './survey-responses.class'
+import { SurveyResponses } from './survey-responses.class'
 
 import globalHooks from '../../hooks'
-import calculateSurveyResults from './calculateSurveyResults'
 import { RoleEnum } from '../../models/users-projects.model'
 
-const DISALLOWED_FIELDS = [
-  'record_id',
-  'participant_id',
-  'pronouns',
-  'location',
-  'birth_month',
-  'birth_year',
-  'created_at',
-  'dataset_id',
-]
+const DISALLOWED_FIELDS = ['record_id', 'participant_id', 'pronouns', 'birth_month', 'birth_year', 'created_at']
 
 /*
 TODO: Reimplement
@@ -60,10 +49,11 @@ const calculateSurveyResultsIfNeeded = () => async (context: HookContext) => {
 }
   */
 
-const appendDatasetName = () => async (context: HookContext) => {
+const addExtraInformation = () => async (context: HookContext) => {
   const { app, result } = context
 
   if (Array.isArray(result)) {
+    // Add dataset_name
     const datasetIds = uniq(result.map((r) => r.dataset_id))
     const datasetIdToDatasetName: { [key: string]: string } = {}
     for (const datasetId of datasetIds) {
@@ -77,8 +67,40 @@ const appendDatasetName = () => async (context: HookContext) => {
     for (const response of result) {
       response.dataset_name = datasetIdToDatasetName[response.dataset_id]
     }
+
+    // Add names of relevant users
+    const userIds = uniq(result.flatMap((r) => [r.follow_up_recommendation_by, r.started_by]))
+    const userIdToUserName: { [key: string]: string } = {}
+    for (const userId of userIds) {
+      if (!userId) {
+        continue
+      }
+      const user = await app.service('users').get(userId)
+      userIdToUserName[userId] = `${user.first_name} ${user.last_name}`
+    }
+
+    for (const response of result) {
+      if (response.follow_up_recommendation_by) {
+        response.follow_up_recommendation_by_name = userIdToUserName[response.follow_up_recommendation_by]
+      }
+      if (response.started_by) {
+        response.started_by_name = userIdToUserName[response.started_by]
+      }
+    }
   } else {
+    // Add dataset_name
     result.dataset_name = (await app.service('datasets').get(result.dataset_id)).name
+
+    // Add names of relevant users
+    if (result.follow_up_recommendation_by) {
+      const followUpRecommendationUser = await app.service('users').get(result.follow_up_recommendation_by)
+      result.follow_up_recommendation_by_name = `${followUpRecommendationUser.first_name} ${followUpRecommendationUser.last_name}`
+    }
+
+    if (result.started_by) {
+      const startedByUser = await app.service('users').get(result.started_by)
+      result.started_by_name = `${startedByUser.first_name} ${startedByUser.last_name}`
+    }
   }
 
   return context
@@ -92,6 +114,20 @@ const preventPatchingFields = () => (context: HookContext) => {
       throw new Forbidden(`"${field}" field can not be patched`)
     }
   }
+}
+
+const addFollowUpRecommendationBy = () => (context: HookContext) => {
+  const { data, params } = context
+
+  // If there is no follow_up_recommendation, remove follow_up_recommendation_by
+  if (!data.follow_up_recommendation) {
+    data.follow_up_recommendation_by = null
+  } else {
+    // If there is a follow_up_recommendation, set follow_up_recommendation_by to current user
+    data.follow_up_recommendation_by = params.user.id
+  }
+
+  return context
 }
 
 // prettier-ignore
@@ -132,6 +168,7 @@ const hooks: HookOptions<SurveyResponses> = {
         globalHooks.restrictToOwnProjectsForRedcapServices()
       ),
       preventPatchingFields(),
+      addFollowUpRecommendationBy()
     ],
     remove: [
       iff(isProvider('external'),
@@ -144,13 +181,13 @@ const hooks: HookOptions<SurveyResponses> = {
     all: [],
     find: [
       iff(isProvider('external'),
-        appendDatasetName(),
+        addExtraInformation(),
         //calculateSurveyResultsIfNeeded() TODO: Reimplement
       )
     ],
     get: [
       iff(isProvider('external'),
-        appendDatasetName(),
+        addExtraInformation(),
         //calculateSurveyResultsIfNeeded() TODO: Reimplement
       )
     ],

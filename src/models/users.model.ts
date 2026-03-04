@@ -19,7 +19,7 @@ export enum AccessLevelEnum {
   LIMITED = 1,
 }
 
-enum ActiveStatusEnum {
+export enum UserStatusEnum {
   ACTIVE = 'Active',
   DEACTIVATED = 'Deactivated',
 }
@@ -45,7 +45,7 @@ export class User extends Model<InferAttributes<User>, InferCreationAttributes<U
   declare is_subscribed_to_emails: boolean
   declare unsubscribe_token: typeof DataTypes.UUID
   declare is_superadmin: boolean
-  declare active_status: ActiveStatusEnum
+  declare active_status: UserStatusEnum
   declare last_login: Date
   declare isVerified: CreationOptional<boolean>
   declare verifyToken: CreationOptional<string>
@@ -142,10 +142,10 @@ export default function (app: Application): ModelStatic<Model> {
     },
     active_status: {
       type: DataTypes.ENUM({
-        values: Object.values(ActiveStatusEnum),
+        values: Object.values(UserStatusEnum),
       }),
       allowNull: false,
-      defaultValue: ActiveStatusEnum.ACTIVE,
+      defaultValue: UserStatusEnum.ACTIVE,
     },
     last_login: {
       type: DataTypes.DATE,

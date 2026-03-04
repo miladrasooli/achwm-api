@@ -31,6 +31,7 @@ export interface Configuration {
   }
   static: {
     fileBeatRoot: string
+    uploadRoot: string
   }
   audit: {
     dirname: string

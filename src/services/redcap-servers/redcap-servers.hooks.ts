@@ -47,6 +47,7 @@ const hooks: HookOptions<RedcapServers> = {
       iff(isProvider('external'),
         authenticate('jwt'),
         isVerified(),
+        globalHooks.restrictToSuperadmin() as any
       )
     ],
     find: [],
