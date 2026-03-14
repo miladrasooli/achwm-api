@@ -29,7 +29,7 @@ export default () => {
 
       // Only audit external requests
       if (process.env.ENVIRONMENT === 'production' && hook.params && hook.params.provider === 'rest') {
-        console.log(`Wrote audit event id ${meta.event_id}`)
+        //console.log(`Wrote audit event id ${meta.event_id}`)
         hook.app.get('auditLogger').info(message, omit(meta, [ 'data.password' ]))
       } else if (process.env.ENVIRONMENT === 'development') {
         console.log(message)
