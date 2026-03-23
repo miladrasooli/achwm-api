@@ -33,7 +33,7 @@ export enum Metadata {
   BIRTH_YEAR = 'birth_year',
   PRONOUNS = 'pronouns',
   DATASET_ID = 'dataset_id',
-  LOCATION = 'survey_location',
+  LOCATION = 'location',
   PARTICIPANT_CONSENTED = 'participant_consented',
   STATUS = 'status',
   REVIEW_QUESTION_SHOWING = 'review_question_showing',
@@ -45,8 +45,12 @@ export enum Metadata {
   RECORD_ID = 'record_id',
 }
 
+export enum MultipleChoice {
+  Q000 = 'q000',
+}
+
 export enum Outcome {
-  CLINICIAN_ASSESSMENT_RESULT = 'clinician_rating',
+  CLINICIAN_ASSESSMENT_RESULT = 'follow_up_recommendation',
   SUMMARY_SCORE = 'summary_score',
   SPIRITUAL_SCORE = 'spiritual_score',
   EMOTIONAL_SCORE = 'emotional_score',

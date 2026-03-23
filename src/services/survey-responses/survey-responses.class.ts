@@ -8,9 +8,10 @@ import { Application } from '../../declarations'
 import { achwmToRedcap, getRedcapCredentials, HEADERS, Metadata, redcapToAchwm } from '../redcap/redcapUtils'
 import { ProjectStatusEnum } from '../../models/projects.model'
 
-type SurveyResponse = {
+export type SurveyResponse = {
   [Metadata.PARTICIPANT_UUID]: string
   [Metadata.DATASET_ID]: string
+  [Metadata.UPDATED_AT]: string
 }
 
 export enum SurveyStatusEnum {

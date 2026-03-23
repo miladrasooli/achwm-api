@@ -27,6 +27,14 @@ type MinimalParticipantRecord = {
   [Metadata.UPDATED_AT]?: string
 }
 
+export enum PronounsEnum {
+  HE_HIM = 'He / Him / His',
+  SHE_HER = 'She / Her / Hers',
+  THEY_THEM = 'They / Them / Theirs',
+  OTHER = 'Other',
+  PREFER_NOT_TO_SAY = 'Prefer Not To Say',
+}
+
 export class Participants {
   app: Application
 
