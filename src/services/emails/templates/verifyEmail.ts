@@ -5,7 +5,7 @@ const verifyEmail = (props: EmailProps) => {
   const { actionUrl, unsubscribeUrl } = props;
   const APP_BASE_URL = process.env.APP_BASE_URL;
 
-  const subject = "ACHWM Verify Email";
+  const subject = "Verify your email address for Aaniish Naa Gegii";
 
   const html = mjml2html(`
     <mjml>
@@ -44,9 +44,6 @@ const verifyEmail = (props: EmailProps) => {
             <mj-text align="center" mj-class="xsmall">
               Aaniish Naa Gegii Children's Health and Wellness Measure
             </mj-text>
-            <mj-text align="center" font-size="12px">
-              <a href="${unsubscribeUrl}" target="_blank" class="link-blue">Unsubscribe </a> from ACHWM emails
-            </mj-text>
           </mj-column>
         </mj-section>
       </mj-body>
@@ -65,7 +62,6 @@ const verifyEmail = (props: EmailProps) => {
 
     Aaniish Naa Gegii Children's Health and Wellness Measure
 
-    Unsubscribe from ACHWM emails (${unsubscribeUrl})
   `;
 
   return {

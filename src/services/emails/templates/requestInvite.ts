@@ -9,7 +9,7 @@ const requestInvite = (props: RequestInviteProps) => {
   const { requestorEmail, actionUrl, unsubscribeUrl } = props;
   const APP_BASE_URL = process.env.APP_BASE_URL;
 
-  const subject = "ACHWM Request Invitation";
+  const subject = "Request to join your project on Aaniish Naa Gegii";
 
   const html = mjml2html(`
     <mjml>
@@ -43,9 +43,6 @@ const requestInvite = (props: RequestInviteProps) => {
             <mj-text align="center" mj-class="xsmall">
               Aaniish Naa Gegii Children's Health and Wellness Measure
             </mj-text>
-            <mj-text align="center" font-size="12px">
-              <a href="${unsubscribeUrl}" target="_blank" class="link-blue">Unsubscribe </a> from ACHWM emails
-            </mj-text>
           </mj-column>
         </mj-section>
       </mj-body>
@@ -62,8 +59,6 @@ const requestInvite = (props: RequestInviteProps) => {
     Log In To ACHWM (${actionUrl})
 
     Aaniish Naa Gegii Children's Health and Wellness Measure
-
-    Unsubscribe from ACHWM emails (${unsubscribeUrl})
   `;
 
   return {

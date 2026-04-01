@@ -1,4 +1,5 @@
 /* eslint-disable no-console */
+import 'dotenv/config'
 import app from './app'
 import logger from './logger'
 

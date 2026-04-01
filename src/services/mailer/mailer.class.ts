@@ -44,9 +44,14 @@ export class Mailer {
           host: HOST,
           port: PORT,
           secure: false,
+          requireTLS: true,
           debug: true,
           logger: true,
           auth: { user: USERNAME, pass: PASSWORD },
+          tls: {
+            minVersion: "TLSv1.2",
+            rejectUnauthorized: true,
+          },
         });
         break;
 

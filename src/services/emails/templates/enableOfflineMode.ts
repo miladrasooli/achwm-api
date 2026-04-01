@@ -5,7 +5,7 @@ const enableOfflineMode = (props: EmailProps) => {
   const { actionUrl, unsubscribeUrl, qrCode } = props;
   const APP_BASE_URL = process.env.APP_BASE_URL;
 
-  const subject = "ACHWM Offline Mode";
+  const subject = "Aaniish Naa Gegii offline access";
 
   const html = mjml2html(`
     <mjml>
@@ -45,9 +45,6 @@ const enableOfflineMode = (props: EmailProps) => {
             <mj-text align="center" mj-class="xsmall">
               Aaniish Naa Gegii Children's Health and Wellness Measure
             </mj-text>
-            <mj-text align="center" font-size="12px">
-              <a href="${unsubscribeUrl}" target="_blank" class="link-blue">Unsubscribe </a> from ACHWM emails
-            </mj-text>
           </mj-column>
         </mj-section>
       </mj-body>
@@ -66,8 +63,6 @@ const enableOfflineMode = (props: EmailProps) => {
     Enable Offline Mode ( ${actionUrl} )
 
     Aaniish Naa Gegii Children's Health and Wellness Measure
-
-    Unsubscribe from ACHWM emails ( ${unsubscribeUrl} )
   `;
 
   return {

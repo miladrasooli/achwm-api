@@ -5,7 +5,7 @@ const resetPassword = (props: EmailProps) => {
   const { actionUrl, unsubscribeUrl } = props;
   const APP_BASE_URL = process.env.APP_BASE_URL;
 
-  const subject = "ACHWM Password Reset";
+  const subject = "Password reset requested for your Aaniish Naa Gegii account";
 
   const html = mjml2html(`
     <mjml>
@@ -44,10 +44,6 @@ const resetPassword = (props: EmailProps) => {
             <mj-text align="center" mj-class="xsmall">
               Aaniish Naa Gegii Children's Health and Wellness Measure
             </mj-text>
-            <mj-text align="center" font-size="12px">
-              <a href="${unsubscribeUrl}" target="_blank" class="link-blue">Unsubscribe </a> from ACHWM emails
-            </mj-text>
-
           </mj-column>
         </mj-section>
       </mj-body>
@@ -68,8 +64,6 @@ const resetPassword = (props: EmailProps) => {
     Only people who know the email address associated with your ACHWM account and your ACHWM password can log into your account.
 
     Aaniish Naa Gegii Children's Health and Wellness Measure
-
-    Unsubscribe from ACHWM emails (${unsubscribeUrl})
   `;
 
   return {

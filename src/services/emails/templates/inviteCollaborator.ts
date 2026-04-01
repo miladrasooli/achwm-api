@@ -7,7 +7,8 @@ const inviteCollaborator = (
   const { actionUrl, projectName, projectRole, unsubscribeUrl } = props;
   const APP_BASE_URL = process.env.APP_BASE_URL;
 
-  const subject = "ACHWM Invitation";
+  const subject =
+    "ou’ve been invited to collaborate on Aaniish Naa Gegii project";
 
   const html = mjml2html(`
     <mjml>
@@ -45,9 +46,6 @@ const inviteCollaborator = (
             <mj-text align="center" mj-class="xsmall">
               Aaniish Naa Gegii Children's Health and Wellness Measure
             </mj-text>
-            <mj-text align="center" font-size="12px">
-              <a href="${unsubscribeUrl}" target="_blank" class="link-blue">Unsubscribe </a> from ACHWM emails
-            </mj-text>
           </mj-column>
         </mj-section>
       </mj-body>
@@ -59,7 +57,6 @@ const inviteCollaborator = (
 
     Aaniish Naa Gegii Children's Health and Wellness Measure
 
-    Unsubscribe from ACHWM emails (${unsubscribeUrl})
   `;
 
   return {

@@ -57,14 +57,24 @@ const sendEmail = () => async (context: HookContext) => {
   await app.service('mailer').create({
     from: CONTACT_MAIL_TO,
     to: email,
-    list: {
-      // List-Unsubscribe: http://example.com, other options at: https://nodemailer.com/message/list-headers/
-      unsubscribe: {
-        url: unsubscribeUrl,
-      },
+    envelope: {
+      from: CONTACT_MAIL_TO,
+      to: email,
     },
+    headers: {
+      "X-Entity-Type": "Transactional",
+      "X-Auto-Response-Suppress": "All",
+      "Auto-Submitted": "auto-generated",
+    },
+    //Having unsubscribe link in the email ca cause the email to go to spam, TODO: so only include it for unsubscribable email types
+    // list: {
+    //   // List-Unsubscribe: http://example.com, other options at: https://nodemailer.com/message/list-headers/
+    //   unsubscribe: {
+    //     url: unsubscribeUrl,
+    //   },
+    // },
     ...TEMPLATES[type as EmailTypeEnum]({ ...context.data, unsubscribeUrl }),
-  })
+  });
 
   return context
 }

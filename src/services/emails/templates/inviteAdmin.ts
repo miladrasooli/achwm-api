@@ -5,7 +5,8 @@ const inviteAdmin = (props: EmailProps & { communityName: string }) => {
   const { actionUrl, communityName, unsubscribeUrl } = props;
   const APP_BASE_URL = process.env.APP_BASE_URL;
 
-  const subject = "ACHWM Invitation";
+  const subject =
+    "You’ve been invited as an administrator in Aaniish Naa Gegii";
 
   const html = mjml2html(`
     <mjml>
@@ -43,9 +44,6 @@ const inviteAdmin = (props: EmailProps & { communityName: string }) => {
             <mj-text align="center" mj-class="xsmall">
               Aaniish Naa Gegii Children's Health and Wellness Measure
             </mj-text>
-            <mj-text align="center" font-size="12px">
-              <a href="${unsubscribeUrl}" target="_blank" class="link-blue">Unsubscribe </a> from ACHWM emails
-            </mj-text>
           </mj-column>
         </mj-section>
       </mj-body>
@@ -57,7 +55,6 @@ const inviteAdmin = (props: EmailProps & { communityName: string }) => {
 
     Aaniish Naa Gegii Children's Health and Wellness Measure
 
-    Unsubscribe from ACHWM emails (${unsubscribeUrl})
   `;
 
   return {
