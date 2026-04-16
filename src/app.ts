@@ -112,7 +112,7 @@ app.configure(() => {
 app.use(helmet())
 app.use(helmet.hsts({ maxAge: 31536000, preload: true }))
 app.use(helmet.referrerPolicy({ policy: 'no-referrer' }))
-app.use(cors({ origin: [APP_BASE_URL] }))
+app.use(cors({ origin: [APP_BASE_URL], maxAge: 7200 }))
 app.use(compress() as any)
 app.use(json())
 app.use(urlencoded({ extended: true }))

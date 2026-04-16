@@ -3,6 +3,7 @@ import { Application } from '../declarations'
 import authManagement from './auth-management/auth-management.service'
 import adminsCommunities from './admins-communities/admins-communities.service'
 import communities from './communities/communities.service'
+import dashboardService from './dashboard-service/dashboard-service.service'
 import datasets from './datasets/datasets.service'
 import emails from './emails/emails.service'
 import invitations from './invitations/invitations.service'
@@ -30,6 +31,7 @@ export default function (app: Application): void {
   app.configure(authManagement)
   app.configure(adminsCommunities)
   app.configure(communities)
+  app.configure(dashboardService)
   app.configure(datasets)
   app.configure(emails)
   app.configure(invitations)
