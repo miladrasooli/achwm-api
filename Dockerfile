@@ -14,10 +14,9 @@ RUN apt-get update && \
     rm /tmp/chrome.deb && \
     rm -rf /var/lib/apt/lists/*
 
-ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD true
+ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true
 
-ENV PORT=4001 \
-    UPLOAD_ROOT=/home/node/uploads \
+ENV UPLOAD_ROOT=/home/node/uploads \
     FILEBEAT_ROOT=/home/node/uploads/filebeat_logs \
     AUDIT_LOGS_DIR=/home/node/log \
     NODE_ENV=production
