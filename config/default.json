@@ -1,6 +1,6 @@
 {
   "host": "localhost",
-  "port": 4081,
+  "port": "API_PORT",
   "public": "/home/node/public/",
   "paginate": {
     "default": 10,
