@@ -1,4 +1,5 @@
 {
+  "port": "API_PORT",
   "postgres": {
     "database": "POSTGRES_DB",
     "username": "POSTGRES_USER",
