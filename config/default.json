@@ -1,20 +1,22 @@
 {
   "host": "localhost",
-  "port": 4001,
-  "public": "/home/node/public/",
+  "APP_BASE_URL": "http://localhost:4002",
+  "port": 4081,
+  "public": "./public/",
   "paginate": {
     "default": 10,
     "max": 50
   },
   "postgres": {
-    "database": "POSTGRES_DB",
-    "username": "POSTGRES_USER",
-    "password": "POSTGRES_PASSWORD",
-    "host": "POSTGRES_HOST"
+    "database": "postgres",
+    "username": "postgres",
+    "password": "IwzqZvb31tzcbhfXCW9zRFgN9afj8YgvI2lcPN2XX2O67kWmj05ffRCn6x4pWKVS",
+    "host": "localhost",
+    "port": 5433
   },
   "static": {
-    "uploadRoot": "/home/node/uploads",
-    "fileBeatRoot": "/home/node/uploads/filebeat_logs"
+    "uploadRoot": "./uploads",
+    "fileBeatRoot": "./uploads/filebeat_logs"
   },
   "audit": {
     "dirname": "AUDIT_LOGS_DIR"
