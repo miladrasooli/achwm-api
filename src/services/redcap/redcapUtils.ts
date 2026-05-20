@@ -31,6 +31,8 @@ export enum Metadata {
   PARTICIPANT_ID = 'participant_id',
   BIRTH_MONTH = 'birth_month',
   BIRTH_YEAR = 'birth_year',
+  BIRTH_DATE = 'birth_date',
+  AGE = 'age',
   PRONOUNS = 'pronouns',
   DATASET_ID = 'dataset_id',
   LOCATION = 'location',

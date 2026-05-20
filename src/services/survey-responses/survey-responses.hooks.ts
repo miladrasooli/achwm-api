@@ -12,7 +12,16 @@ import { SurveyResponses } from './survey-responses.class'
 import globalHooks from '../../hooks'
 import { RoleEnum } from '../../models/users-projects.model'
 
-const DISALLOWED_FIELDS = ['record_id', 'participant_id', 'pronouns', 'birth_month', 'birth_year', 'created_at']
+const DISALLOWED_FIELDS = [
+  'record_id',
+  'participant_id',
+  'pronouns',
+  'birth_month',
+  'birth_year',
+  'birth_date',
+  'age',
+  'created_at',
+]
 
 /*
 TODO: Reimplement
