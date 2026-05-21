@@ -35,6 +35,7 @@ export class SurveyResponses {
 
   async find(params: {
     query: {
+      raw?: string;
       project_id: string;
       participant_uuid?: string;
       dataset_id?: string;
@@ -54,6 +55,13 @@ export class SurveyResponses {
     }
 
     if (dataset_id) {
+      if (query.raw==='true') {
+        return await this._findAllSurveyResponsesInDatasetRaw(
+          url,
+          token,
+          dataset_id,
+        );
+      }
       // Return list of all survey resposnes for this dataset
       return await this._findAllSurveyResponsesInDataset(
         url,
@@ -93,6 +101,30 @@ export class SurveyResponses {
   }
 
   async _findAllSurveyResponsesInDataset(
+    url: string,
+    token: string,
+    dataset_id: string,
+  ) {
+    const surveyResponses = (
+      await axios.post(
+        url,
+        {
+          token,
+          content: "record",
+          action: "export",
+          format: "json",
+          returnFormat: "json",
+        },
+        HEADERS,
+      )
+    ).data.filter(
+      (sr: SurveyResponse) => sr[Metadata.DATASET_ID] === dataset_id,
+    );
+
+    return await redcapToAchwm(surveyResponses, url, token);
+  }
+
+  async _findAllSurveyResponsesInDatasetRaw(
     url: string,
     token: string,
     dataset_id: string,

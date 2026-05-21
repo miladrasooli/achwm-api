@@ -59,6 +59,9 @@ export enum Outcome {
   PHYSICAL_SCORE = 'physical_score',
   MENTAL_SCORE = 'mental_score',
   POTENTIAL_RISK = 'potential_risk',
+  SKIPPED_DESCRIPTIVE_ANSWERS = 'skipped_descriptive_answers',
+  SKIPPED_MULTIPLE_CHOICE = 'skipped_multiple_choice',
+  SKIPPED_FLAGS = 'skipped_flags',
   FLAGS = 'flags',
 }
 
@@ -180,6 +183,71 @@ const redcapToAchwmHelper = (record: any, dataDictionary: any) => {
 
   return record
 }
+//Add this function to handle the case where the value is not translated. [CSV export]
+const redcapToAchwmHelperNoValueTranslation = (record: any, dataDictionary: any) => {
+  for (const entry of dataDictionary) {
+    const {
+      field_name,
+      field_type,
+      select_choices_or_calculations,
+      text_validation_type_or_show_slider_number,
+    } = entry;
+
+    // Translate between integer value and string value of multiple choice questions except survey questions
+    if (select_choices_or_calculations && !QUESTION_REGEX.test(field_name)) {
+      const optionList = select_choices_or_calculations
+        .split(OPTION_DELIMITER)
+        .map((s: string) => s.trim());
+      const options = optionList.reduce((acc: any, curr: string) => {
+        const [integerValue, stringValue] = curr
+          .split(OPTION_COMPONENT_DELIMITER)
+          .map((s: string) => s.trim());
+        acc[integerValue] = stringValue;
+        return acc;
+      }, {});
+
+      record[field_name] = options[record[field_name]] || "";
+    }
+
+    // Translate between integer value and boolean value of true/false questions
+    if (field_type === "truefalse") {
+      record[field_name] = record[field_name] > 0 ? true : false;
+    }
+
+    // Handle number fields
+    if (text_validation_type_or_show_slider_number === "number") {
+      if (record[field_name] == null || record[field_name] === "") {
+        record[field_name] = null;
+      } else {
+        record[field_name] = Number(record[field_name]);
+      }
+    }
+  }
+
+  // Handle current_question_index
+  if (record[Metadata.CURRENT_QUESTION_INDEX] != null) {
+    record[Metadata.CURRENT_QUESTION_INDEX] = Number(
+      record[Metadata.CURRENT_QUESTION_INDEX],
+    );
+  }
+
+  // Handle fields that are objects
+  if (record[Metadata.SKIPPED_QUESTION_INCIDES]) {
+    record[Metadata.SKIPPED_QUESTION_INCIDES] = JSON.parse(
+      record[Metadata.SKIPPED_QUESTION_INCIDES],
+    ).map((n: any) => Number(n));
+  }
+  if (record[Metadata.SURVEY_PREFERENCES]) {
+    record[Metadata.SURVEY_PREFERENCES] = JSON.parse(
+      record[Metadata.SURVEY_PREFERENCES],
+    );
+  }
+  if (record[Outcome.FLAGS]) {
+    record[Outcome.FLAGS] = JSON.parse(record[Outcome.FLAGS]);
+  }
+
+  return record;
+};
 
 export const achwmToRedcap = async (record: any, url: string, token: string) => {
   if (Array.isArray(record)) {
