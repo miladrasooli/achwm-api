@@ -8,7 +8,7 @@ const inviteCollaborator = (
   const APP_BASE_URL = process.env.APP_BASE_URL;
 
   const subject =
-    "ou’ve been invited to collaborate on Aaniish Naa Gegii project";
+    "You’ve been invited to collaborate on Aaniish Naa Gegii project";
 
   const html = mjml2html(`
     <mjml>
