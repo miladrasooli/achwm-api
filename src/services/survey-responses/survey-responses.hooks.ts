@@ -20,6 +20,7 @@ const DISALLOWED_FIELDS = [
   'birth_year',
   'birth_date',
   'age',
+  'school_grade',
   'created_at',
 ]
 

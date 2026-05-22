@@ -18,6 +18,7 @@ type RedcapParticipant = {
   [Metadata.BIRTH_MONTH]: string
   [Metadata.BIRTH_YEAR]: string
   [Metadata.PRONOUNS]: string
+  [Metadata.SCHOOL_GRADE]: string
   [Metadata.SURVEY_PREFERENCES]: string
 }
 
@@ -71,6 +72,7 @@ export class Participants {
             Metadata.BIRTH_MONTH,
             Metadata.BIRTH_YEAR,
             Metadata.PRONOUNS,
+            Metadata.SCHOOL_GRADE,
             Metadata.SURVEY_PREFERENCES,
             Metadata.DATASET_ID,
           ],
@@ -153,6 +155,7 @@ export class Participants {
             Metadata.BIRTH_MONTH,
             Metadata.BIRTH_YEAR,
             Metadata.PRONOUNS,
+            Metadata.SCHOOL_GRADE,
           ],
         },
         HEADERS,

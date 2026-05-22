@@ -11,11 +11,18 @@ import { RoleEnum } from '../../models/users-projects.model'
 import globalHooks from '../../hooks'
 
 const participantValidator: ValidatorFn = (formValues, _) => {
-  const { participant_id } = formValues
+  const { participant_id, school_grade } = formValues
 
   if (participant_id !== undefined) {
     if (!/^\d*$/.test(participant_id)) {
       throw new BadRequest('participant_id field can only contain digits')
+    }
+  }
+
+  if (school_grade !== undefined && school_grade !== null && school_grade !== '') {
+    const grade = Number(school_grade)
+    if (!Number.isInteger(grade) || grade < 1 || grade > 13) {
+      throw new BadRequest('school_grade must be between 1 and 13')
     }
   }
 
@@ -65,7 +72,8 @@ const hooks: HookOptions<Participants> = {
         'participant_id', 
         'birth_month', 
         'birth_year', 
-        'pronouns', 
+        'pronouns',
+        'school_grade',
         'survey_preferences'
       ])
     ],
