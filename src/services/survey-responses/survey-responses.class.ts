@@ -1,6 +1,6 @@
 import axios from "axios";
 import dayjs from "dayjs";
-import { get, omit } from "lodash";
+import { cloneDeep, get, omit } from "lodash";
 
 import { BadRequest, Forbidden } from "@feathersjs/errors";
 
@@ -55,13 +55,6 @@ export class SurveyResponses {
     }
 
     if (dataset_id) {
-      if (query.raw==='true') {
-        return await this._findAllSurveyResponsesInDatasetRaw(
-          url,
-          token,
-          dataset_id,
-        );
-      }
       // Return list of all survey resposnes for this dataset
       return await this._findAllSurveyResponsesInDataset(
         url,
@@ -122,30 +115,6 @@ export class SurveyResponses {
     );
 
     return await redcapToAchwm(surveyResponses, url, token);
-  }
-
-  async _findAllSurveyResponsesInDatasetRaw(
-    url: string,
-    token: string,
-    dataset_id: string,
-  ) {
-    const surveyResponses = (
-      await axios.post(
-        url,
-        {
-          token,
-          content: "record",
-          action: "export",
-          format: "json",
-          returnFormat: "json",
-        },
-        HEADERS,
-      )
-    ).data.filter(
-      (sr: SurveyResponse) => sr[Metadata.DATASET_ID] === dataset_id,
-    );
-
-    return surveyResponses;
   }
 
   async get(record_id: string, params: { query: { project_id: string } }) {

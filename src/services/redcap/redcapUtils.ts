@@ -134,6 +134,8 @@ export const redcapToAchwm = async (record: any, url: string, token: string) => 
 }
 
 const redcapToAchwmHelper = (record: any, dataDictionary: any) => {
+  record.raw = { ...omit(record, 'raw') }
+
   for (const entry of dataDictionary) {
     const { field_name, field_type, select_choices_or_calculations, text_validation_type_or_show_slider_number } = entry
 
