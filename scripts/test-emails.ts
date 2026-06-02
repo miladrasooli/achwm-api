@@ -77,12 +77,11 @@ export default function (app: Application) {
     })
   }
 
-  const testEnableOfflineMode = () => {
-
+  const testEnableOfflineMode = async () => {
     const offlineUrl = `${APP_BASE_URL}/action-url`
-    QRCode.toString(offlineUrl,{type:'svg', width: 200}, async function (err : any, url : any) {
-      // Send invitation email
-      return app.service('mailer').create({
+    const qrCode = await QRCode.toDataURL(offlineUrl, { width: 200 })
+
+    return app.service('mailer').create({
       from: CONTACT_MAIL_TO,
       to: emailAddresses,
       list: {
@@ -91,13 +90,12 @@ export default function (app: Application) {
         },
       },
       ...TEMPLATES[EmailTypeEnum.ENABLE_OFFLINE_MODE]({
-        actionUrl: `${APP_BASE_URL}/action-url`,
+        actionUrl: offlineUrl,
         unsubscribeUrl,
-        qrCode: url
+        qrCode,
       }),
     })
-  })
-}
+  }
 
   console.log('Testing emails')
 
