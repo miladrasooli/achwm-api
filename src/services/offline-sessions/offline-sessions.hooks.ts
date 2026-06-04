@@ -21,22 +21,19 @@ const sendEmailsToCollaborators = () => async (context: HookContext) => {
   const { id, project_id, collaborators } = result
 
   const offlineUrl = `${APP_BASE_URL}/offline/${id}/${project_id}`
+  const qrCode = await QRCode.toDataURL(offlineUrl, { width: 200 })
 
-  QRCode.toString(offlineUrl, { type: 'svg', width: 200 }, async function (err: any, url: any) {
-    for (const userId of Object.keys(collaborators)) {
-      // Find user's email
-      const user = await app.service('users').get(userId)
+  for (const userId of Object.keys(collaborators)) {
+    const user = await app.service('users').get(userId)
 
-      // Send invitation email
-      await app.service('emails').create({
-        email: user.email,
-        user_id: userId,
-        type: EmailTypeEnum.ENABLE_OFFLINE_MODE,
-        actionUrl: offlineUrl,
-        qrCode: url,
-      })
-    }
-  })
+    await app.service('emails').create({
+      email: user.email,
+      user_id: userId,
+      type: EmailTypeEnum.ENABLE_OFFLINE_MODE,
+      actionUrl: offlineUrl,
+      qrCode,
+    })
+  }
 }
 
 const offlineSessionsValidator: ValidatorFn = async (formValues, context) => {

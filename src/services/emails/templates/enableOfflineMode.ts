@@ -38,9 +38,11 @@ const enableOfflineMode = (props: EmailProps) => {
             <mj-button href="${actionUrl}" target="_blank" background-color="#08594C" color="#FAFAFE" border-radius='2rem' height='2.5rem' width='17rem' font-size='1.125rem'>
               Enable Offline Session
             </mj-button>
-            <mj-text align="center">
-              ${qrCode}
-            </mj-text>
+            ${
+              qrCode
+                ? `<mj-image src="${qrCode}" alt="QR code for offline session link" width="200px" align="center" />`
+                : ""
+            }
             <mj-divider border-width="1px" border-style="solid" border-color="#383838" />
             <mj-text align="center" mj-class="xsmall">
               Aaniish Naa Gegii Children's Health and Wellness Measure

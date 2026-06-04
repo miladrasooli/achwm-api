@@ -15,6 +15,7 @@ import { Project } from '../../models/projects.model'
 import { RoleEnum, UserProject } from '../../models/users-projects.model'
 
 import globalHooks from '../../hooks'
+import { extractIncludeUserQuery, includeUserOnFind } from './hooks/includeUserOnFind'
 
 const userProjectValidator: ValidatorFn = async (formValues, context) => {
   const { project_pin } = formValues
@@ -250,6 +251,7 @@ const hooks: HookOptions<UsersProjects> = {
       iff(isProvider('external'),
         globalHooks.restrictToOwnProjects()
       ),
+      extractIncludeUserQuery(),
     ],
     get: [
       iff(isProvider('external'),
@@ -286,7 +288,9 @@ const hooks: HookOptions<UsersProjects> = {
 
   after: {
     all: [],
-    find: [],
+    find: [
+      includeUserOnFind(),
+    ],
     get: [],
     create: [
       updateAdminsCommunities(),

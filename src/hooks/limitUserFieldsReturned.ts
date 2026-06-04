@@ -101,6 +101,35 @@ export const limitUserFieldsReturnedHelper = async (
   return pick(requestedUser, USER_FIELDS_TO_RETURN)
 }
 
+export const limitUserFieldsForProjectCollaborators = (
+  requestedUser: User,
+  requestingUser: User,
+  requestingUserProjectRole: number | undefined,
+) => {
+  if (requestingUser.is_superadmin) {
+    return pick(requestedUser, [
+      ...USER_FIELDS_TO_RETURN,
+      ...USER_FIELDS_COORDINATOR_AND_ABOVE,
+      ...USER_FIELDS_SELF_ONLY,
+      ...USER_FIELDS_SUPERADMIN_ONLY,
+    ])
+  }
+
+  if (requestingUser.id === requestedUser.id) {
+    return pick(requestedUser, [
+      ...USER_FIELDS_TO_RETURN,
+      ...USER_FIELDS_COORDINATOR_AND_ABOVE,
+      ...USER_FIELDS_SELF_ONLY,
+    ])
+  }
+
+  if (requestingUserProjectRole !== undefined && requestingUserProjectRole >= RoleEnum.COORDINATOR) {
+    return pick(requestedUser, [...USER_FIELDS_TO_RETURN, ...USER_FIELDS_COORDINATOR_AND_ABOVE])
+  }
+
+  return pick(requestedUser, USER_FIELDS_TO_RETURN)
+}
+
 const limitUserFieldsReturned = (pathToRequestedUser: string) => async (context: HookContext) => {
   const { app, id, params, path } = context
   const requestedUser = get(context, pathToRequestedUser)

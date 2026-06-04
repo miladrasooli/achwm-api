@@ -11,6 +11,7 @@ export enum RedcapActionEnum {
   CHECK_PROJECT_CONNECTION = 'checkProjectConnection',
   CREATE_PROJECT = 'createProject',
   GET_DATASET_INFO = 'getDatasetInfo',
+  GET_DATASETS_INFO = 'getDatasetsInfo',
 }
 
 export class Redcap {
@@ -32,6 +33,8 @@ export class Redcap {
         return await this._createProject(params)
       case RedcapActionEnum.GET_DATASET_INFO:
         return await this._getDatasetInfo(params)
+      case RedcapActionEnum.GET_DATASETS_INFO:
+        return await this._getDatasetsInfo(params)
     }
   }
 
@@ -196,15 +199,10 @@ export class Redcap {
     return newProjectToken
   }
 
-  async _getDatasetInfo(params: { project_id: string; dataset_id: string }) {
-    const { project_id, dataset_id } = params
+  async _exportDatasetRecords(project_id: string) {
     const { url, token } = await getRedcapCredentials(project_id, this.app)
 
-    if (!dataset_id) {
-      throw new BadRequest('dataset_id must be provided')
-    }
-
-    const datasetRecords = (
+    return (
       await axios.post(
         url,
         {
@@ -216,13 +214,74 @@ export class Redcap {
         },
         HEADERS,
       )
-    ).data.filter((r: any) => r[Metadata.DATASET_ID] === dataset_id)
+    ).data
+  }
 
-    const numberOfParticipants = uniq(datasetRecords.map((r: any) => r[Metadata.PARTICIPANT_UUID])).length
+  _summarizeDatasetRecords(records: any[]) {
+    const numberOfParticipants = uniq(records.map((r: any) => r[Metadata.PARTICIPANT_UUID])).length
 
     return {
-      numberOfSurveyResponses: datasetRecords.length,
+      numberOfSurveyResponses: records.length,
       numberOfParticipants,
     }
+  }
+
+  async _getDatasetInfo(params: { project_id: string; dataset_id: string }) {
+    const { project_id, dataset_id } = params
+
+    if (!dataset_id) {
+      throw new BadRequest('dataset_id must be provided')
+    }
+
+    const datasetRecords = (await this._exportDatasetRecords(project_id)).filter(
+      (r: any) => r[Metadata.DATASET_ID] === dataset_id,
+    )
+
+    return this._summarizeDatasetRecords(datasetRecords)
+  }
+
+  async _getDatasetsInfo(params: { project_id: string; dataset_ids?: string[] }) {
+    const { project_id, dataset_ids } = params
+    const allRecords = await this._exportDatasetRecords(project_id)
+    const targetDatasetIds = dataset_ids ? new Set(dataset_ids) : null
+
+    const recordsByDatasetId: Record<string, any[]> = {}
+
+    for (const record of allRecords) {
+      const datasetId = record[Metadata.DATASET_ID]
+
+      if (!datasetId) {
+        continue
+      }
+
+      if (targetDatasetIds && !targetDatasetIds.has(datasetId)) {
+        continue
+      }
+
+      if (!recordsByDatasetId[datasetId]) {
+        recordsByDatasetId[datasetId] = []
+      }
+
+      recordsByDatasetId[datasetId].push(record)
+    }
+
+    const result: Record<string, { numberOfSurveyResponses: number; numberOfParticipants: number }> = {}
+
+    for (const [datasetId, records] of Object.entries(recordsByDatasetId)) {
+      result[datasetId] = this._summarizeDatasetRecords(records)
+    }
+
+    if (dataset_ids) {
+      for (const datasetId of dataset_ids) {
+        if (!result[datasetId]) {
+          result[datasetId] = {
+            numberOfSurveyResponses: 0,
+            numberOfParticipants: 0,
+          }
+        }
+      }
+    }
+
+    return result
   }
 }
