@@ -49,6 +49,7 @@ const restrictToCommunitiesFromOwnProjects = () => async (context: HookContext) 
     await app.service('projects').find({
       query: {
         community_id: id,
+        status: { $ne: ProjectStatusEnum.ARCHIVED },
         $select: ['id'],
       },
       paginate: false,

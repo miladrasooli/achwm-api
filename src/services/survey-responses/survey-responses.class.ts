@@ -158,7 +158,7 @@ export class SurveyResponses {
       .service("projects")
       .get(project_id);
 
-    if (status === ProjectStatusEnum.INACTIVE) {
+    if (status === ProjectStatusEnum.INACTIVE || status === ProjectStatusEnum.ARCHIVED) {
       throw new Forbidden("This project is inactive");
     }
 

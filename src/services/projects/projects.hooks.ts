@@ -13,6 +13,7 @@ import { AdminCommunity } from '../../models/admins-communities.model'
 import { RoleEnum, UserProject } from '../../models/users-projects.model'
 
 import globalHooks from '../../hooks'
+import { ProjectStatusEnum } from '../../models/projects.model'
 import { RedcapActionEnum } from '../redcap/redcap.class'
 
 // When a user creates a project, add the necessary user/project pairs to users-projects table
@@ -83,6 +84,10 @@ const projectValidator: ValidatorFn = async (formValues, context) => {
   if (method === 'patch') {
     if (priorValues.redcap_token && redcap_token !== undefined) {
       throw new Forbidden('"redcap_token" field can not be patched')
+    }
+
+    if (formValues.status === ProjectStatusEnum.ARCHIVED && !context.params?.fromArchiveAction) {
+      throw new BadRequest('Use the archive action to archive a project')
     }
   }
 
@@ -168,6 +173,8 @@ const hooks: HookOptions<Projects> = {
     update: [],
     patch: [],
     remove: [],
+    archive: [],
+    deleteProject: [],
   },
 
   before: {
@@ -206,8 +213,23 @@ const hooks: HookOptions<Projects> = {
     ],
     remove: [
       iff(isProvider('external'),
-        globalHooks.restrictToOwnProjects({projectIdField: 'id', minimumRole: RoleEnum.ADMIN})
+        disallow(),
       ),
+    ],
+    archive: [
+      iff(isProvider('external'),
+        authenticate('jwt'),
+        isVerified(),
+        globalHooks.restrictToSuperadmin() as any,
+      ),
+    ],
+    deleteProject: [
+      iff(isProvider('external'),
+        authenticate('jwt'),
+        isVerified(),
+        globalHooks.restrictToSuperadmin() as any,
+      ),
+      globalHooks.beginTransaction(),
     ],
   },
 
@@ -224,6 +246,10 @@ const hooks: HookOptions<Projects> = {
     update: [],
     patch: [],
     remove: [],
+    archive: [],
+    deleteProject: [
+      globalHooks.commitTransaction(),
+    ],
   },
 
   error: {
@@ -236,6 +262,10 @@ const hooks: HookOptions<Projects> = {
     update: [],
     patch: [],
     remove: [],
+    archive: [],
+    deleteProject: [
+      globalHooks.rollbackTransaction(),
+    ],
   },
 }
 

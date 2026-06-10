@@ -15,6 +15,7 @@ import { Application, DBModelStatic } from '../declarations'
 export enum ProjectStatusEnum {
   ACTIVE = 'Active',
   INACTIVE = 'Inactive',
+  ARCHIVED = 'Archived',
 }
 
 export enum ProjectPurposeEnum {

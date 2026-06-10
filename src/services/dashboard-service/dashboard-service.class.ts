@@ -4,6 +4,7 @@ import { NotAuthenticated } from '@feathersjs/errors'
 
 import { Application } from '../../declarations'
 import { CommunityStatusEnum } from '../../models/communities.model'
+import { ProjectStatusEnum } from '../../models/projects.model'
 
 type UserProjectRecord = {
   project_id: string
@@ -69,8 +70,10 @@ export class DashboardService {
       ),
     ])
 
+    const visibleProjects = projects.filter((project) => project.status !== ProjectStatusEnum.ARCHIVED)
+
     const dashboardProjects = await Promise.all(
-      projects.map(async (project) => {
+      visibleProjects.map(async (project) => {
         const [participantCount, collaborators] = await Promise.all([
           this.app.service('participants').find({
             query: {

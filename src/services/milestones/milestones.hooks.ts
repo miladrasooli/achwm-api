@@ -43,7 +43,9 @@ const hooks: HookOptions<Milestones> = {
       disallow()
     ],
     remove: [
-      disallow()
+      iff(isProvider('external'),
+        disallow(),
+      ),
     ],
   },
 

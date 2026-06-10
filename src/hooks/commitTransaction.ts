@@ -12,7 +12,7 @@ import type { HookContext } from '../declarations'
  * https://github.com/feathersjs-ecosystem/feathers-sequelize/issues/188
  */
 const commitTransaction = () => async (context: HookContext) => {
-  checkContext(context, 'after', ['create', 'update', 'remove'])
+  checkContext(context, 'after', ['create', 'update', 'remove', 'deleteProject'] as any)
 
   if (!context.params.transaction) {
     throw new GeneralError('No transaction found in context.params')

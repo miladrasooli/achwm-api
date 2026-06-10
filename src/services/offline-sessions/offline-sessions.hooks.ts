@@ -66,7 +66,7 @@ const checkProjectStatus = () => async (context: HookContext) => {
 
   const { status } = await app.service('projects').get(data.project_id)
 
-  if (status === ProjectStatusEnum.INACTIVE) {
+  if (status === ProjectStatusEnum.INACTIVE || status === ProjectStatusEnum.ARCHIVED) {
     throw new Forbidden('Offline sessions cannot be created for inactive projects')
   }
 

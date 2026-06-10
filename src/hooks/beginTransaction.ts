@@ -18,7 +18,7 @@ import type { HookContext } from '../declarations'
  * https://github.com/feathersjs-ecosystem/feathers-sequelize/issues/188
  */
 const beginTransaction = () => async (context: HookContext) => {
-  checkContext(context, 'before', ['create', 'update', 'remove'])
+  checkContext(context, 'before', ['create', 'update', 'remove', 'deleteProject'] as any)
 
   const sequelize = context.app.get('sequelizeClient')
   const transaction = await sequelize.transaction()

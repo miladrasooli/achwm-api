@@ -3,6 +3,7 @@ import { get } from 'lodash'
 import { BadRequest, NotFound } from '@feathersjs/errors'
 import { HookContext, Paginated } from '@feathersjs/feathers'
 
+import { ProjectStatusEnum } from '../models/projects.model'
 import { RoleEnum, UserProject } from '../models/users-projects.model'
 
 const restrictToOwnProjectsForRedcapServices = (minimumRole?: RoleEnum) => async (context: HookContext) => {
@@ -23,6 +24,16 @@ const restrictToOwnProjectsForRedcapServices = (minimumRole?: RoleEnum) => async
 
   if (!projectId) {
     throw new BadRequest('project_id must be provided')
+  }
+
+  const { status } = await app.service('projects').get(projectId)
+  if (status === ProjectStatusEnum.ARCHIVED) {
+    if (method === 'find') {
+      context.result = []
+      return context
+    }
+
+    throw new NotFound(`No record found for project_id '${projectId}'`)
   }
 
   // Get user ID

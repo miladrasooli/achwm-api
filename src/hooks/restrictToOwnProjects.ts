@@ -4,6 +4,7 @@ import { Paginated } from '@feathersjs/feathers'
 import { BadRequest, NotFound } from '@feathersjs/errors'
 
 import { HookContext } from '../declarations'
+import { ProjectStatusEnum } from '../models/projects.model'
 import { RoleEnum, UserProject } from '../models/users-projects.model'
 
 const restrictToOwnProjects =
@@ -28,7 +29,11 @@ const restrictToOwnProjects =
     let projectId: string
 
     if (['get', 'patch', 'remove'].includes(method)) {
-      projectId = (await service.get(id))[projectIdField]
+      const project = await service.get(id)
+      if (project.status === ProjectStatusEnum.ARCHIVED) {
+        throw new NotFound(`No record found for id '${id}'`)
+      }
+      projectId = project[projectIdField]
     } else {
       projectId = data[projectIdField]
     }
