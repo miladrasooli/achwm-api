@@ -1,2 +1,9 @@
 node_modules
 lib
+.vscode
+.opencode
+graphify-out
+.env
+all_projects.json
+uploads
+scripts/db/logs
