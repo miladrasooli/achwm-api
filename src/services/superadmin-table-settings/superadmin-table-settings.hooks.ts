@@ -23,7 +23,7 @@ const hooks: HookOptions<SuperadminTableSettings> = {
     all: [
       iff(isProvider('external'),
         authenticate('jwt'),
-        globalHooks.restrictToSuperadmin() as any
+        globalHooks.restrictToAnyStaffAction() as any
       )
     ],
     find: [],

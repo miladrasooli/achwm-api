@@ -8,6 +8,7 @@ import { RedcapServers } from './redcap-servers.class'
 
 import globalHooks from '../../hooks'
 import { RedcapServer } from '../../models/redcap-servers.model'
+import { StaffActionKey } from '../../staff-actions'
 
 const setDefaultRedcapServer = () => async (context: HookContext) => {
   const { service, result } = context
@@ -46,22 +47,39 @@ const hooks: HookOptions<RedcapServers> = {
     all: [
       iff(isProvider('external'),
         authenticate('jwt'),
-        isVerified(),
-        globalHooks.restrictToSuperadmin() as any
+        isVerified()
       )
     ],
-    find: [],
-    get: [],
+    find: [
+      iff(isProvider('external'),
+        globalHooks.restrictToStaffAction(StaffActionKey.VIEW_REDCAP)
+      )
+    ],
+    get: [
+      iff(isProvider('external'),
+        globalHooks.restrictToStaffAction(StaffActionKey.VIEW_REDCAP)
+      )
+    ],
     create: [
+      iff(isProvider('external'),
+        globalHooks.restrictToStaffAction(StaffActionKey.CREATE_REDCAP)
+      ),
       lowerCase('server_url')
     ],
     update: [
       disallow(),
     ],
     patch: [
+      iff(isProvider('external'),
+        globalHooks.restrictToStaffAction(StaffActionKey.EDIT_REDCAP)
+      ),
       lowerCase('server_url')
     ],
-    remove: [],
+    remove: [
+      iff(isProvider('external'),
+        globalHooks.restrictToStaffAction(StaffActionKey.DELETE_REDCAP)
+      )
+    ],
   },
 
   after: {

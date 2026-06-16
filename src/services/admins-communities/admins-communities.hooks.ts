@@ -8,8 +8,18 @@ import { AdminsCommunities } from './admins-communities.class'
 import { Id, Paginated } from '@feathersjs/feathers'
 import { Project } from '../../models/projects.model'
 import { RoleEnum, UserProject } from '../../models/users-projects.model'
+import { StaffActionKey } from '../../staff-actions'
+import { userHasStaffAction } from '../../hooks/restrictToStaffAction'
 
 import globalHooks from '../../hooks'
+
+const restrictToStaffEditCommunitiesOrOwnUserId = () => async (context: HookContext) => {
+  if (await userHasStaffAction(context, StaffActionKey.EDIT_COMMUNITIES)) {
+    return context
+  }
+
+  return restrictToOwnUserId()(context)
+}
 
 const restrictToOwnUserId = () => async (context: HookContext) => {
   const { id, method, params, service } = context
@@ -144,7 +154,7 @@ const hooks: HookOptions<AdminsCommunities> = {
     ],
     find: [
       iff(isProvider('external'),
-        restrictToOwnUserId()
+        restrictToStaffEditCommunitiesOrOwnUserId()
       )
     ],
     get: [
@@ -154,7 +164,7 @@ const hooks: HookOptions<AdminsCommunities> = {
     ],
     create: [
       iff(isProvider('external'),
-        globalHooks.restrictToSuperadmin()
+        globalHooks.restrictToStaffAction(StaffActionKey.EDIT_COMMUNITIES)
       )
     ],
     update: [

@@ -7,8 +7,19 @@ import { HookContext, HookOptions } from '../../declarations'
 import { Datasets } from './datasets.class'
 
 import { RoleEnum } from '../../models/users-projects.model'
+import { StaffActionKey } from '../../staff-actions'
+import { userHasStaffAction } from '../../hooks/restrictToStaffAction'
 
 import globalHooks from '../../hooks'
+
+const restrictToStaffActionOrOwnProject =
+  (action: StaffActionKey, minimumRole?: RoleEnum) => async (context: HookContext) => {
+    if (await userHasStaffAction(context, action)) {
+      return context
+    }
+
+    return globalHooks.restrictToOwnProjects({ minimumRole })(context)
+  }
 
 const removeSurveyResponsesInDataset = () => async (context: HookContext) => {
   const { app, id, service } = context
@@ -45,7 +56,7 @@ const hooks: HookOptions<Datasets> = {
     ],
     find: [
       iff(isProvider('external'),
-        globalHooks.restrictToOwnProjects()
+        restrictToStaffActionOrOwnProject(StaffActionKey.VIEW_PROJECTS)
       )
     ],
     get: [
@@ -55,7 +66,7 @@ const hooks: HookOptions<Datasets> = {
     ],
     create: [
       iff(isProvider('external'),
-        globalHooks.restrictToOwnProjects({minimumRole: RoleEnum.ADMIN})
+        restrictToStaffActionOrOwnProject(StaffActionKey.EDIT_PROJECTS, RoleEnum.ADMIN)
       )
     ],
     update: [
@@ -63,13 +74,13 @@ const hooks: HookOptions<Datasets> = {
     ],
     patch: [
       iff(isProvider('external'),
-        globalHooks.restrictToOwnProjects({minimumRole: RoleEnum.ADMIN})
+        restrictToStaffActionOrOwnProject(StaffActionKey.EDIT_PROJECTS, RoleEnum.ADMIN)
       ),
       globalHooks.restrictPatchToFields(['name', 'status'])
     ],
     remove: [
       iff(isProvider('external'),
-        globalHooks.restrictToOwnProjects({minimumRole: RoleEnum.ADMIN})
+        restrictToStaffActionOrOwnProject(StaffActionKey.EDIT_PROJECTS, RoleEnum.ADMIN)
       ),
       removeSurveyResponsesInDataset()
     ],

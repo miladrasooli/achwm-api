@@ -19,6 +19,8 @@ import redcap from './redcap/redcap.service'
 import redcapServers from './redcap-servers/redcap-servers.service'
 import redcapTemplates from './redcap-templates/redcap-templates.service'
 import scoringDictionaries from './scoring-dictionaries/scoring-dictionaries.service'
+import staffActionPermissions from './staff-action-permissions/staff-action-permissions.service'
+import staffActions from './staff-actions/staff-actions.service'
 import superadminManageProjects from './superadmin-manage-projects/superadmin-manage-projects.service'
 import superadminTableSettings from './superadmin-table-settings/superadmin-table-settings.service'
 import surveyResponses from './survey-responses/survey-responses.service'
@@ -48,6 +50,8 @@ export default function (app: Application): void {
   app.configure(redcapServers)
   app.configure(redcapTemplates)
   app.configure(scoringDictionaries)
+  app.configure(staffActions)
+  app.configure(staffActionPermissions)
   app.configure(superadminManageProjects)
   app.configure(superadminTableSettings)
   app.configure(surveyResponses)

@@ -1,15 +1,13 @@
 import * as feathersAuthentication from '@feathersjs/authentication'
 const { authenticate } = feathersAuthentication.hooks
 import { disallow, iff, isProvider } from 'feathers-hooks-common'
+import { isVerified } from 'feathers-authentication-management'
 
 import { HookOptions } from '../../declarations'
-import { Milestones } from './milestones.classes'
-
-import globalHooks from '../../hooks'
-import { StaffActionKey } from '../../staff-actions'
+import { StaffActions } from './staff-actions.class'
 
 // prettier-ignore
-const hooks: HookOptions<Milestones> = {
+const hooks: HookOptions<StaffActions> = {
   around: {
     all: [],
     find: [],
@@ -21,27 +19,26 @@ const hooks: HookOptions<Milestones> = {
   },
 
   before: {
-    all: [],
-    find: [
+    all: [
       iff(isProvider('external'),
         authenticate('jwt'),
-        globalHooks.restrictToStaffAction(StaffActionKey.VIEW_COMMUNITIES) as any
+        isVerified()
       )
     ],
-    get: [
-      disallow()
-    ],
+    find: [],
+    get: [],
     create: [
       iff(isProvider('external'),
-        authenticate('jwt'),
-        globalHooks.restrictToStaffAction(StaffActionKey.EDIT_COMMUNITIES) as any
-      )
+        disallow(),
+      ),
     ],
     update: [
       disallow(),
     ],
     patch: [
-      disallow()
+      iff(isProvider('external'),
+        disallow(),
+      ),
     ],
     remove: [
       iff(isProvider('external'),

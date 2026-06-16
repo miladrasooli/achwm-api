@@ -64,11 +64,6 @@ const restrictToLowerRole = () => async (context: HookContext) => {
 
   const targetUserProject = await service.get(id)
 
-  // Don't restrict superadmins
-  if (get(params, 'user.is_superadmin')) {
-    return context
-  }
-
   const userRole = (
     await service.find({
       user_id: params.user.id,

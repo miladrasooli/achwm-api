@@ -46,7 +46,6 @@ type UserRecord = {
   id: string
   first_name: string
   last_name: string
-  is_superadmin: boolean
   [key: string]: unknown
 }
 

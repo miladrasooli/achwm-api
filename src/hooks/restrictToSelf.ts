@@ -1,5 +1,3 @@
-import { get } from 'lodash'
-
 import { Forbidden } from '@feathersjs/errors'
 
 import { HookContext } from '../declarations'
@@ -12,11 +10,6 @@ const restrictToSelf =
 
     const { userIdField = 'user_id' } = options
     const { id, params, service } = context
-
-    // Don't restrict superadmin
-    if (get(params, 'user.is_superadmin')) {
-      return context
-    }
 
     const userId = params.user.id
     const targetUserId = (await service.get(id))[userIdField]

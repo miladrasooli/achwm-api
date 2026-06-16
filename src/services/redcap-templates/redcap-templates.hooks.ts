@@ -11,6 +11,8 @@ import { RedcapTemplates } from './redcap-templates.class'
 
 import globalHooks from '../../hooks'
 import { intersection } from 'lodash'
+import { StaffActionKey } from '../../staff-actions'
+import { userHasStaffAction } from '../../hooks/restrictToStaffAction'
 
 const redcapTemplatesValidator: ValidatorFn = async (formValues, context) => {
   const { id, service } = context
@@ -49,7 +51,7 @@ const restrictToAdminsAndAbove = () => async (context: HookContext) => {
   const { app, params } = context
   const { user, query } = params
 
-  if (user.is_superadmin) {
+  if (await userHasStaffAction(context, StaffActionKey.VIEW_REDCAP)) {
     return context
   }
 
@@ -79,6 +81,14 @@ const restrictToAdminsAndAbove = () => async (context: HookContext) => {
   return context
 }
 
+const protectTokenUnlessCanViewRedcap = () => async (context: HookContext) => {
+  if (await userHasStaffAction(context, StaffActionKey.VIEW_REDCAP)) {
+    return context
+  }
+
+  return protect('token')(context)
+}
+
 // prettier-ignore
 const hooks: HookOptions<RedcapTemplates> = {
   around: {
@@ -105,12 +115,12 @@ const hooks: HookOptions<RedcapTemplates> = {
     ],
     get: [
       iff(isProvider('external'),
-        globalHooks.restrictToSuperadmin()
+        globalHooks.restrictToStaffAction(StaffActionKey.VIEW_REDCAP)
       ),
     ],
     create: [
       iff(isProvider('external'),
-        globalHooks.restrictToSuperadmin(),
+        globalHooks.restrictToStaffAction(StaffActionKey.CREATE_REDCAP),
       ),
       validate(redcapTemplatesValidator),
     ],
@@ -119,13 +129,13 @@ const hooks: HookOptions<RedcapTemplates> = {
     ],
     patch: [
       iff(isProvider('external'),
-        globalHooks.restrictToSuperadmin(),
+        globalHooks.restrictToStaffAction(StaffActionKey.EDIT_REDCAP),
       ),
       validate(redcapTemplatesValidator),
     ],
     remove: [
       iff(isProvider('external'),
-        globalHooks.restrictToSuperadmin(),
+        globalHooks.restrictToStaffAction(StaffActionKey.DELETE_REDCAP),
       ),
     ],
   },
@@ -133,10 +143,7 @@ const hooks: HookOptions<RedcapTemplates> = {
   after: {
     all: [
       iff(isProvider('external'),
-        iff(
-          (context: HookContext) => !context.params.user.is_superadmin,
-          protect('token')
-        )
+        protectTokenUnlessCanViewRedcap()
       )
     ],
     find: [],

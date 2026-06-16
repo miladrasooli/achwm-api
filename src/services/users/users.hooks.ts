@@ -1,6 +1,6 @@
 import * as feathersAuthentication from '@feathersjs/authentication'
 import * as local from '@feathersjs/authentication-local'
-import { BadRequest } from '@feathersjs/errors'
+import { BadRequest, Forbidden } from '@feathersjs/errors'
 import { addVerification, isVerified, removeVerification } from 'feathers-authentication-management'
 import { disallow, iff, isProvider, lowerCase } from 'feathers-hooks-common'
 
@@ -9,6 +9,8 @@ import { get } from 'lodash'
 
 import { HookContext, HookOptions } from '../../declarations'
 import { Users } from './users.class'
+import { StaffActionKey } from '../../staff-actions'
+import { userHasStaffAction } from '../../hooks/restrictToStaffAction'
 
 import globalHooks from '../../hooks'
 import sendVerificationEmail from '../auth-management/hooks/sendVerificationEmail'
@@ -91,6 +93,35 @@ const resendVerificationEmail = () => async (context: HookContext) => {
   return context
 }
 
+const restrictStaffUserPatch = () => async (context: HookContext) => {
+  const { data } = context
+  const patchFields = Object.keys(data)
+  const statusFields = ['active_status']
+  const profileFields = patchFields.filter((field) => !statusFields.includes(field))
+
+  if (profileFields.length > 0 && !(await userHasStaffAction(context, StaffActionKey.EDIT_PEOPLE))) {
+    throw new Forbidden('User does not have permission')
+  }
+
+  if (data.active_status && !(await userHasStaffAction(context, StaffActionKey.ACTIVATE_DEACTIVATE_USERS))) {
+    throw new Forbidden('User does not have permission')
+  }
+
+  return context
+}
+
+const restrictToStaffUserReader = () => async (context: HookContext) => {
+  const staffReadActions = [StaffActionKey.VIEW_PEOPLE, StaffActionKey.VIEW_PROJECTS, StaffActionKey.VIEW_COMMUNITIES]
+
+  for (const action of staffReadActions) {
+    if (await userHasStaffAction(context, action)) {
+      return context
+    }
+  }
+
+  throw new Forbidden('User does not have permission')
+}
+
 // prettier-ignore
 const hooks: HookOptions<Users> = {
   around: {
@@ -108,12 +139,14 @@ const hooks: HookOptions<Users> = {
     find: [
       iff(isProvider('external'),
         authenticate('jwt'),
-        globalHooks.restrictToSuperadmin() as any
+        globalHooks.loadStaffActions('params.user') as any,
+        restrictToStaffUserReader() as any
       ),
     ],
     get: [
       iff(isProvider('external'),
         authenticate('jwt'),
+        globalHooks.loadStaffActions('params.user') as any,
         // Only add restriction if user is trying to get someone other than themself
         iff(context => get(context, 'params.user.id') !== context.id,
           isVerified(),
@@ -133,6 +166,7 @@ const hooks: HookOptions<Users> = {
     patch: [
       iff(isProvider('external'),
         authenticate('jwt'),
+        globalHooks.loadStaffActions('params.user') as any,
         iff(context => get(context, 'params.user.id') === context.id, // Restrict to self
           globalHooks.restrictPatchToFields([
             'email', 
@@ -151,7 +185,7 @@ const hooks: HookOptions<Users> = {
           restrictPatchingAccessLevel()
         ).else(
           isVerified(),
-          globalHooks.restrictToSuperadmin(),
+          restrictStaffUserPatch(),
           globalHooks.restrictPatchToFields([
             'email', 
             'first_name', 
@@ -163,7 +197,6 @@ const hooks: HookOptions<Users> = {
             'organization_name', 
             'organization_type', 
             'organization_title',
-            'is_superadmin',
             'active_status'
           ])
         ) as any
@@ -191,6 +224,7 @@ const hooks: HookOptions<Users> = {
       ),
     ],
     get: [
+      globalHooks.loadStaffActions('dispatch'),
       iff(isProvider('external'),
         globalHooks.limitUserFieldsReturned('dispatch')
       ),
@@ -201,6 +235,7 @@ const hooks: HookOptions<Users> = {
     ],
     update: [],
     patch: [
+      globalHooks.loadStaffActions('result'),
       iff(isProvider('external'),
         globalHooks.limitUserFieldsReturned('result')
       ),

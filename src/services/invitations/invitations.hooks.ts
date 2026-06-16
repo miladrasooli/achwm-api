@@ -12,6 +12,8 @@ import { Invitations } from './invitations.class'
 import { ROLE_NAMES, RoleEnum, UserProject } from '../../models/users-projects.model'
 import { EmailTypeEnum } from '../../models/emails.model'
 import { Invitation } from '../../models/invitations.model'
+import { StaffActionKey } from '../../staff-actions'
+import { userHasStaffAction } from '../../hooks/restrictToStaffAction'
 
 import globalHooks from '../../hooks'
 
@@ -27,11 +29,9 @@ const returnAllInvitationsForProject = () => async (context: HookContext) => {
   }
 
   // Check that user has access to this project and is coordinator or above
-  let hasAccess
-  if (user.is_superadmin) {
-    hasAccess = true
-  } else {
-    hasAccess = (
+  const hasAccess =
+    (await userHasStaffAction(context, StaffActionKey.VIEW_PROJECTS)) ||
+    (
       (await app.service('users-projects').find({
         query: {
           user_id: user.id,
@@ -43,7 +43,6 @@ const returnAllInvitationsForProject = () => async (context: HookContext) => {
         },
       })) as Paginated<UserProject>
     ).total
-  }
 
   if (!hasAccess) {
     // Provide query that will not return anything
@@ -255,24 +254,22 @@ const handlePatchingProjectRole = () => async (context: HookContext) => {
 
   const newProjectRole = data.project_role
 
-  if (!user.is_superadmin) {
-    // Make sure new project role isn't higher than user's project role
-    const userId = user.id
-    const projectId = (await service.get(id)).project_id
+  // Make sure new project role isn't higher than user's project role.
+  const userId = user.id
+  const projectId = (await service.get(id)).project_id
 
-    // Assume that user project exists since this comes after restrictToOwnProjects hook
-    const userProjectRole = (
-      (await app.service('users-projects').find({
-        query: {
-          user_id: userId,
-          project_id: projectId,
-        },
-      })) as Paginated<UserProject>
-    ).data[0].project_role
+  // Assume that user project exists since this comes after restrictToOwnProjects hook.
+  const userProjectRole = (
+    (await app.service('users-projects').find({
+      query: {
+        user_id: userId,
+        project_id: projectId,
+      },
+    })) as Paginated<UserProject>
+  ).data[0].project_role
 
-    if (newProjectRole > userProjectRole) {
-      throw new Forbidden(`User does not have sufficient permissions to patch project_role to ${newProjectRole}`)
-    }
+  if (newProjectRole > userProjectRole) {
+    throw new Forbidden(`User does not have sufficient permissions to patch project_role to ${newProjectRole}`)
   }
 
   // Handle switching from admin role

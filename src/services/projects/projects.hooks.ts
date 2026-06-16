@@ -15,6 +15,8 @@ import { RoleEnum, UserProject } from '../../models/users-projects.model'
 import globalHooks from '../../hooks'
 import { ProjectStatusEnum } from '../../models/projects.model'
 import { RedcapActionEnum } from '../redcap/redcap.class'
+import { StaffActionKey } from '../../staff-actions'
+import { userHasStaffAction } from '../../hooks/restrictToStaffAction'
 
 // When a user creates a project, add the necessary user/project pairs to users-projects table
 const createUserProjects = () => async (context: HookContext) => {
@@ -163,6 +165,20 @@ const restrictToAdmins = () => async (context: HookContext) => {
   return context
 }
 
+const restrictToStaffActionOrOwnProject =
+  (action: StaffActionKey, ownProjectOptions: { projectIdField?: string; minimumRole?: RoleEnum } = {}) =>
+  async (context: HookContext) => {
+    if (context.params?.fromArchiveAction) {
+      return context
+    }
+
+    if (await userHasStaffAction(context, action)) {
+      return context
+    }
+
+    return globalHooks.restrictToOwnProjects(ownProjectOptions)(context)
+  }
+
 // prettier-ignore
 const hooks: HookOptions<Projects> = {
   around: {
@@ -186,12 +202,12 @@ const hooks: HookOptions<Projects> = {
     ],
     find: [
       iff(isProvider('external'),
-        globalHooks.restrictToSuperadmin()
+        globalHooks.restrictToStaffAction(StaffActionKey.VIEW_PROJECTS)
       ),
     ],
     get: [
       iff(isProvider('external'),
-        globalHooks.restrictToOwnProjects({projectIdField: 'id'}),
+        restrictToStaffActionOrOwnProject(StaffActionKey.VIEW_PROJECTS, {projectIdField: 'id'}),
       ),
     ],
     create: [
@@ -206,7 +222,7 @@ const hooks: HookOptions<Projects> = {
     ],
     patch: [
       iff(isProvider('external'),
-        globalHooks.restrictToOwnProjects({projectIdField: 'id', minimumRole: RoleEnum.ADMIN})
+        restrictToStaffActionOrOwnProject(StaffActionKey.EDIT_PROJECTS, {projectIdField: 'id', minimumRole: RoleEnum.ADMIN})
       ),
       globalHooks.restrictPatchToFields(['name', 'description', 'purpose', 'number_of_participants', 'status', 'redcap_token']),
       validate(projectValidator)
@@ -220,14 +236,14 @@ const hooks: HookOptions<Projects> = {
       iff(isProvider('external'),
         authenticate('jwt'),
         isVerified(),
-        globalHooks.restrictToSuperadmin() as any,
+        globalHooks.restrictToStaffAction(StaffActionKey.ARCHIVE_PROJECTS) as any,
       ),
     ],
     deleteProject: [
       iff(isProvider('external'),
         authenticate('jwt'),
         isVerified(),
-        globalHooks.restrictToSuperadmin() as any,
+        globalHooks.restrictToStaffAction(StaffActionKey.DELETE_PROJECTS) as any,
       ),
       globalHooks.beginTransaction(),
     ],

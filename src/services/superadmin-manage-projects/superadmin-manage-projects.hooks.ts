@@ -7,6 +7,7 @@ import { HookOptions } from '../../declarations'
 import { SuperadminManageProjects } from './superadmin-manage-projects.class'
 
 import globalHooks from '../../hooks'
+import { StaffActionKey } from '../../staff-actions'
 
 // prettier-ignore
 const hooks: HookOptions<SuperadminManageProjects> = {
@@ -20,7 +21,7 @@ const hooks: HookOptions<SuperadminManageProjects> = {
       iff(isProvider('external'),
         authenticate('jwt'),
         isVerified(),
-        globalHooks.restrictToSuperadmin() as any,
+        globalHooks.restrictToStaffAction(StaffActionKey.VIEW_PROJECTS) as any,
       ),
     ],
     find: [],

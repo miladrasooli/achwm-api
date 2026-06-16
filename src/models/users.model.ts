@@ -11,6 +11,7 @@ import {
 } from 'sequelize'
 
 import { Application, DBModelStatic } from '../declarations'
+import { StaffActionKey } from '../staff-actions'
 
 export enum AccessLevelEnum {
   PROFILE = 4,
@@ -44,7 +45,6 @@ export class User extends Model<InferAttributes<User>, InferCreationAttributes<U
   declare organization_title: string
   declare is_subscribed_to_emails: boolean
   declare unsubscribe_token: typeof DataTypes.UUID
-  declare is_superadmin: boolean
   declare active_status: UserStatusEnum
   declare last_login: Date
   declare isVerified: CreationOptional<boolean>
@@ -52,6 +52,7 @@ export class User extends Model<InferAttributes<User>, InferCreationAttributes<U
   declare verifyExpires: CreationOptional<Date>
   declare resetToken: CreationOptional<string>
   declare resetExpires: CreationOptional<Date>
+  declare staff_actions?: StaffActionKey[]
 }
 
 export default function (app: Application): ModelStatic<Model> {
@@ -135,11 +136,6 @@ export default function (app: Application): ModelStatic<Model> {
       allowNull: false,
       unique: true,
     },
-    is_superadmin: {
-      type: DataTypes.BOOLEAN,
-      defaultValue: false,
-      allowNull: false,
-    },
     active_status: {
       type: DataTypes.ENUM({
         values: Object.values(UserStatusEnum),
@@ -186,6 +182,11 @@ export default function (app: Application): ModelStatic<Model> {
 
     users.belongsToMany(projects, {
       through: models['users-projects'],
+      foreignKey: 'user_id',
+    })
+
+    users.belongsToMany(models['staff-actions'], {
+      through: models['staff-action-permissions'],
       foreignKey: 'user_id',
     })
   }

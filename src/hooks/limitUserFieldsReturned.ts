@@ -6,6 +6,7 @@ import { get, pick, set } from 'lodash'
 import { Application, HookContext } from '../declarations'
 import { RoleEnum, UserProject } from '../models/users-projects.model'
 import { User } from '../models/users.model'
+import { StaffActionKey, hasAnyStaffAction, hasStaffAction } from '../staff-actions'
 
 const USER_FIELDS_TO_RETURN = ['id', 'first_name', 'last_name']
 
@@ -24,11 +25,11 @@ const USER_FIELDS_SELF_ONLY = [
   'access_level',
   'isVerified',
   'is_subscribed_to_emails',
-  'is_superadmin',
   'active_status',
+  'staff_actions',
 ]
 
-const USER_FIELDS_SUPERADMIN_ONLY = ['created_at', 'last_login', 'how_did_you_hear_about_us', 'active_status']
+const USER_FIELDS_STAFF_ONLY = ['created_at', 'last_login', 'how_did_you_hear_about_us', 'active_status']
 
 export const limitUserFieldsReturnedHelper = async (
   app: Application,
@@ -45,14 +46,20 @@ export const limitUserFieldsReturnedHelper = async (
     ])
   }
 
-  // Check if requesting user is superadmin
-  if (requestingUser.is_superadmin) {
+  // Check if requesting user can manage people
+  if (
+    hasAnyStaffAction(requestingUser, [
+      StaffActionKey.VIEW_PEOPLE,
+      StaffActionKey.VIEW_PROJECTS,
+      StaffActionKey.VIEW_COMMUNITIES,
+    ])
+  ) {
     // Return all returnable user fields
     return pick(requestedUser, [
       ...USER_FIELDS_TO_RETURN,
       ...USER_FIELDS_COORDINATOR_AND_ABOVE,
       ...USER_FIELDS_SELF_ONLY,
-      ...USER_FIELDS_SUPERADMIN_ONLY,
+      ...USER_FIELDS_STAFF_ONLY,
     ])
   }
 
@@ -106,12 +113,12 @@ export const limitUserFieldsForProjectCollaborators = (
   requestingUser: User,
   requestingUserProjectRole: number | undefined,
 ) => {
-  if (requestingUser.is_superadmin) {
+  if (hasStaffAction(requestingUser, StaffActionKey.VIEW_PROJECTS)) {
     return pick(requestedUser, [
       ...USER_FIELDS_TO_RETURN,
       ...USER_FIELDS_COORDINATOR_AND_ABOVE,
       ...USER_FIELDS_SELF_ONLY,
-      ...USER_FIELDS_SUPERADMIN_ONLY,
+      ...USER_FIELDS_STAFF_ONLY,
     ])
   }
 

@@ -16,6 +16,8 @@ import { UserProject } from '../../models/users-projects.model'
 import globalHooks from '../../hooks'
 import { CommunityStatusEnum } from '../../models/communities.model'
 import { ProjectStatusEnum } from '../../models/projects.model'
+import { StaffActionKey } from '../../staff-actions'
+import { userHasStaffAction } from '../../hooks/restrictToStaffAction'
 
 const restrictToCommunitiesFromOwnProjects = () => async (context: HookContext) => {
   const { app, id, method, params } = context
@@ -24,8 +26,8 @@ const restrictToCommunitiesFromOwnProjects = () => async (context: HookContext) 
     throw new Error('restrictToCommunitiesFromOwnProjects is currently only configured for "get" method')
   }
 
-  // Don't restrict superadmins
-  if (get(params, 'user.is_superadmin')) {
+  // Staff who can view communities can access any community.
+  if (await userHasStaffAction(context, StaffActionKey.VIEW_COMMUNITIES)) {
     return context
   }
 
@@ -260,7 +262,7 @@ const hooks: HookOptions<Communities> = {
     ], 
     find: [
       iff(isProvider('external'),
-        globalHooks.restrictToSuperadmin()
+        globalHooks.restrictToStaffAction(StaffActionKey.VIEW_COMMUNITIES)
       )
     ],
     get: [
@@ -270,7 +272,7 @@ const hooks: HookOptions<Communities> = {
     ],
     create: [
       iff(isProvider('external'),
-        globalHooks.restrictToSuperadmin(),
+        globalHooks.restrictToStaffAction(StaffActionKey.CREATE_COMMUNITIES),
       ),
       stashAdminId(),
       checkStatus()
@@ -280,7 +282,7 @@ const hooks: HookOptions<Communities> = {
     ],
     patch: [
       iff(isProvider('external'),
-        globalHooks.restrictToSuperadmin(),
+        globalHooks.restrictToStaffAction(StaffActionKey.EDIT_COMMUNITIES),
         // we now allow the client to request an admin change by including
         // `adminId` on the object.  The hook below will move that value into
         // the join table (`admins-communities`).  The field itself is not
@@ -305,7 +307,7 @@ const hooks: HookOptions<Communities> = {
     ],
     remove: [
       iff(isProvider('external'),
-        globalHooks.restrictToSuperadmin()
+        globalHooks.restrictToStaffAction(StaffActionKey.DELETE_COMMUNITIES)
       )
     ],
   },

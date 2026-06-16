@@ -35,7 +35,7 @@ export class Projects extends SequelizeService {
       throw new BadRequest('id is required')
     }
 
-    const project = await this.get(id, params)
+    const project = await this.get(id, { ...params, provider: undefined })
 
     if (project.status === ProjectStatusEnum.ARCHIVED) {
       throw new BadRequest('Project is already archived')

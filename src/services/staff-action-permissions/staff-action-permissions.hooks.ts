@@ -1,15 +1,16 @@
 import * as feathersAuthentication from '@feathersjs/authentication'
 const { authenticate } = feathersAuthentication.hooks
 import { disallow, iff, isProvider } from 'feathers-hooks-common'
+import { isVerified } from 'feathers-authentication-management'
 
 import { HookOptions } from '../../declarations'
-import { Milestones } from './milestones.classes'
+import { StaffActionKey } from '../../staff-actions'
+import { StaffActionPermissions } from './staff-action-permissions.class'
 
 import globalHooks from '../../hooks'
-import { StaffActionKey } from '../../staff-actions'
 
 // prettier-ignore
-const hooks: HookOptions<Milestones> = {
+const hooks: HookOptions<StaffActionPermissions> = {
   around: {
     all: [],
     find: [],
@@ -18,36 +19,32 @@ const hooks: HookOptions<Milestones> = {
     update: [],
     patch: [],
     remove: [],
+    replaceForUser: [],
   },
 
   before: {
-    all: [],
-    find: [
+    all: [
       iff(isProvider('external'),
         authenticate('jwt'),
-        globalHooks.restrictToStaffAction(StaffActionKey.VIEW_COMMUNITIES) as any
+        isVerified(),
+        globalHooks.restrictToStaffAction(StaffActionKey.MANAGE_STAFF_PERMISSIONS) as any,
       )
     ],
+    find: [],
     get: [
-      disallow()
-    ],
-    create: [
-      iff(isProvider('external'),
-        authenticate('jwt'),
-        globalHooks.restrictToStaffAction(StaffActionKey.EDIT_COMMUNITIES) as any
-      )
-    ],
-    update: [
-      disallow(),
-    ],
-    patch: [
-      disallow()
-    ],
-    remove: [
       iff(isProvider('external'),
         disallow(),
       ),
     ],
+    create: [],
+    update: [
+      disallow(),
+    ],
+    patch: [
+      disallow(),
+    ],
+    remove: [],
+    replaceForUser: [],
   },
 
   after: {
@@ -58,6 +55,7 @@ const hooks: HookOptions<Milestones> = {
     update: [],
     patch: [],
     remove: [],
+    replaceForUser: [],
   },
 
   error: {
@@ -68,6 +66,7 @@ const hooks: HookOptions<Milestones> = {
     update: [],
     patch: [],
     remove: [],
+    replaceForUser: [],
   },
 }
 

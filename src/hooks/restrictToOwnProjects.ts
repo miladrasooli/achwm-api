@@ -13,11 +13,6 @@ const restrictToOwnProjects =
     const { projectIdField = 'project_id', minimumRole } = options
     const { app, data, id, method, params, service } = context
 
-    // Don't restrict superadmins
-    if (get(params, 'user.is_superadmin')) {
-      return context
-    }
-
     if (method === 'find') {
       return restrictFindToOwnProjects(projectIdField, minimumRole)(context)
     }

@@ -20,6 +20,7 @@ enum PronounsEnum {
   PREFER_NOT_TO_SAY = 'Prefer Not To Say',
 }
 
+const staff_user_id = generateUUID()
 const user_id_1 = generateUUID()
 const user_id_2 = generateUUID()
 const user_id_3 = generateUUID()
@@ -113,7 +114,8 @@ const communities: Partial<Community>[] = [
 
 const users: Partial<User>[] = [
   {
-    // Superadmin
+    // Staff user with all staff actions
+    id: staff_user_id,
     first_name: 'Super',
     last_name: 'Admin',
     email: 'superadmin@test.com',
@@ -124,7 +126,6 @@ const users: Partial<User>[] = [
     organization_name: '',
     organization_type: '',
     organization_title: '',
-    is_superadmin: true,
   },
   {
     // Admin for Community 1
@@ -429,6 +430,15 @@ export default async function (app: Application) {
   try {
     await Promise.all([serviceCreate('redcap-servers', redcapServers), serviceCreate('users', users)])
     await Promise.all([serviceCreate('redcap-templates', redcapTemplates), serviceCreate('communities', communities)])
+    const staffActions = await app.service('staff-actions').find({ paginate: false })
+    await serviceCreate(
+      'staff-action-permissions',
+      staffActions.map((action) => ({
+        user_id: staff_user_id,
+        action_id: action.id,
+        granted_by: staff_user_id,
+      })),
+    )
     await serviceCreate('projects', projects)
     await Promise.all([
       serviceCreate('admins-communities', adminsCommunities),

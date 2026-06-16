@@ -9,11 +9,6 @@ import { RoleEnum, UserProject } from '../models/users-projects.model'
 const restrictToOwnProjectsForRedcapServices = (minimumRole?: RoleEnum) => async (context: HookContext) => {
   const { app, data, id, method, params } = context
 
-  // Don't restrict superadmins
-  if (get(params, 'user.is_superadmin')) {
-    return context
-  }
-
   // Get project ID
   let projectId
   if (method === 'create') {

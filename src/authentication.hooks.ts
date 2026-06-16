@@ -47,6 +47,7 @@ const hooks: HookOptions = {
 
   after: {
     all: [
+      globalHooks.loadStaffActions('result.user'),
       iff(isProvider('external'),
         globalHooks.limitUserFieldsReturned('result.user')
       ),

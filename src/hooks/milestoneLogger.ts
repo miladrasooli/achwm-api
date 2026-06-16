@@ -22,7 +22,7 @@ const milestoneLogger = () => async (context: HookContext) => {
   const transaction = get(params, 'sequelize.transaction')
 
   const service = app.service('milestones')
-  const actor = params.user ? (params.user.is_superadmin ? 'Superadmin' : 'User') : 'System'
+  const actor = params.user ? 'User' : 'System'
 
   if (path === 'projects') {
     if (method === 'create') {
