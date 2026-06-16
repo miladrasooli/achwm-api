@@ -80,7 +80,7 @@ export type SuperadminManageCommunityRow = CommunityRecord & {
   projectNames: string
   milestones: MilestoneRecord[]
   serverName?: string
-  adminId?: string
+  adminIds: string[]
 }
 
 export type SuperadminManageCommunitiesResult = {
@@ -154,14 +154,14 @@ export class SuperadminManageCommunities {
     const serversById = new Map(servers.map((server) => [server.id, server]))
     const projectsByCommunityId = groupBy(projects, (project) => project.community_id)
     const milestonesByCommunityId = groupBy(milestones, (milestone) => milestone.community_id)
-    const adminByCommunityId = new Map(adminRelationships.map((admin) => [admin.community_id, admin]))
+    const adminsByCommunityId = groupBy(adminRelationships, (admin) => admin.community_id)
 
     const rows: SuperadminManageCommunityRow[] = []
 
     for (const community of communities) {
       const communityProjects = projectsByCommunityId.get(community.id) ?? []
       const communityMilestones = sortMilestonesDesc(milestonesByCommunityId.get(community.id) ?? [])
-      const adminRelationship = adminByCommunityId.get(community.id)
+      const communityAdmins = adminsByCommunityId.get(community.id) ?? []
 
       let contact: Awaited<ReturnType<typeof limitUserFieldsReturnedHelper>> | undefined
       let contactName = NO_VALUE
@@ -191,7 +191,7 @@ export class SuperadminManageCommunities {
             : NO_VALUE,
         milestones: communityMilestones,
         serverName: community.redcap_server_id ? serversById.get(community.redcap_server_id)?.name : undefined,
-        adminId: adminRelationship?.user_id,
+        adminIds: communityAdmins.map((admin) => admin.user_id),
       })
     }
 

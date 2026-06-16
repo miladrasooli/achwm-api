@@ -174,37 +174,52 @@ const handlePatchLicenseExpiry = () => (context: HookContext) => {
   return context
 }
 
-// before.create hook to remove adminId from the payload and stash it in params so
+// before.create hook to remove adminIds from the payload and stash them in params so
 // that the Sequelize create call doesn't complain about the extra field.  The
 // real work is done in `syncAdminAfterCreate` below.
-const stashAdminId = () => (context: HookContext) => {
+const stashAdminIds = () => (context: HookContext) => {
   const { data, params } = context
-  if (data && data.adminId !== undefined) {
-    params.adminId = data.adminId
+
+  if (!data) {
+    return context
+  }
+
+  if (data.adminIds !== undefined) {
+    params.adminIds = data.adminIds
+    delete data.adminIds
+  } else if (data.adminId !== undefined) {
+    params.adminIds = [data.adminId]
     delete data.adminId
   }
+
   return context
 }
 
-// after.create hook that actually writes the admins-communities record using
-// the id stashed in `params` by `stashAdminId`.  This lets callers include
-// `adminId` in the initial payload if they wish.
+// after.create hook that actually writes the admins-communities records using
+// the ids stashed in `params` by `stashAdminIds`.
 const syncAdminAfterCreate = () => async (context: HookContext) => {
   const { result, params, app } = context
-  if (params && params.adminId) {
+  const adminIds = normalizeAdminIds(params?.adminIds)
+
+  if (!adminIds?.length) {
+    return context
+  }
+
+  for (const userId of adminIds) {
     await app.service('admins-communities').create({
       community_id: result.id,
-      user_id: params.adminId,
+      user_id: userId,
     })
   }
+
   return context
 }
 
-// When a consumer patches a community with an `adminId` field we interpret it
-// as a request to update the corresponding entry in the join table.  The
+// When a consumer patches a community with an `adminIds` field we interpret it
+// as a request to update the corresponding entries in the join table.  The
 // original data object is mutated (the field removed) so that the subsequent
 // `restrictPatchToFields` hook does not reject the request, and then the
-// correct relationship is created/updated via the `admins-communities`
+// correct relationships are created/removed via the `admins-communities`
 // service.  This hook is purposely run *after* `restrictPatchToFields` so the
 // field is allowed, but before the patch is applied to the community record.
 const normalizeUuid = (value: unknown): string => {
@@ -219,46 +234,71 @@ const normalizeUuid = (value: unknown): string => {
   return String(value).trim().toLowerCase()
 }
 
-const syncAdminId = () => async (context: HookContext) => {
+const normalizeAdminIds = (value: unknown): string[] | null => {
+  if (value === undefined) {
+    return null
+  }
+
+  const ids = Array.isArray(value) ? value : [value]
+
+  return [...new Set(ids.map(normalizeUuid).filter(Boolean))]
+}
+
+const extractAdminIdsFromData = (data: Record<string, unknown>): string[] | null => {
+  if (data.adminIds !== undefined) {
+    const adminIds = normalizeAdminIds(data.adminIds)
+    delete data.adminIds
+    return adminIds
+  }
+
+  if (data.adminId !== undefined) {
+    const adminIds = normalizeAdminIds(data.adminId)
+    delete data.adminId
+    return adminIds
+  }
+
+  return null
+}
+
+const syncAdmins = () => async (context: HookContext) => {
   const { data, app, id } = context
 
-  if (!data || data.adminId === undefined) {
+  if (!data) {
     return context
   }
 
-  // grab the value and remove it from the community payload
-  const adminId = normalizeUuid(data.adminId)
-  delete data.adminId
+  const adminIds = extractAdminIdsFromData(data as Record<string, unknown>)
+
+  if (adminIds === null) {
+    return context
+  }
 
   const sequelize = app.get('sequelizeClient')
   const AdminCommunityModel = sequelize.models['admins-communities']
   const communityId = normalizeUuid(id)
 
-  // Use Sequelize directly so we match the exact row without feathers find/pagination quirks.
-  const existingExact = await AdminCommunityModel.findOne({
-    where: { community_id: communityId, user_id: adminId },
-  })
-
-  if (existingExact) {
-    return context
-  }
-
-  // if the admin is changing we cannot patch the record because the
-  // admins-communities service only allows `is_first_login` to be patched
-  // for external providers.  Instead we remove the old row and create a new
-  // one; doing so triggers the normal after-hooks which keep
-  // users-projects in sync.
-  const existingForCommunity = await AdminCommunityModel.findOne({
+  const existing = await AdminCommunityModel.findAll({
     where: { community_id: communityId },
   })
 
-  if (existingForCommunity) {
-    await app
-      .service('admins-communities')
-      .remove(normalizeUuid(existingForCommunity.get('id')) as unknown as Id)
+  const existingUserIds = new Set(existing.map((row) => normalizeUuid(row.get('user_id'))))
+  const desiredUserIds = new Set(adminIds)
+
+  for (const row of existing) {
+    const userId = normalizeUuid(row.get('user_id'))
+
+    if (!desiredUserIds.has(userId)) {
+      await app
+        .service('admins-communities')
+        .remove(normalizeUuid(row.get('id')) as unknown as Id)
+    }
   }
 
-  await app.service('admins-communities').create({ community_id: communityId, user_id: adminId })
+  for (const userId of desiredUserIds) {
+    if (!existingUserIds.has(userId)) {
+      await app.service('admins-communities').create({ community_id: communityId, user_id: userId })
+    }
+  }
 
   return context
 }
@@ -296,7 +336,7 @@ const hooks: HookOptions<Communities> = {
       iff(isProvider('external'),
         globalHooks.restrictToStaffAction(StaffActionKey.CREATE_COMMUNITIES),
       ),
-      stashAdminId(),
+      stashAdminIds(),
       checkStatus()
     ],
     update: [
@@ -305,8 +345,8 @@ const hooks: HookOptions<Communities> = {
     patch: [
       iff(isProvider('external'),
         globalHooks.restrictToStaffAction(StaffActionKey.EDIT_COMMUNITIES),
-        // we now allow the client to request an admin change by including
-        // `adminId` on the object.  The hook below will move that value into
+        // we now allow the client to request admin changes by including
+        // `adminIds` on the object.  The hook below will move those values into
         // the join table (`admins-communities`).  The field itself is not
         // stored on the `communities` table so it must be removed before the
         // patch goes through; otherwise `restrictPatchToFields` will reject it.
@@ -320,10 +360,11 @@ const hooks: HookOptions<Communities> = {
           'contact_id',
           'platform_license_document_link',
           'redcap_server_id',
-          'adminId', // handled specially by `syncAdminId`
+          'adminId', // legacy single-admin field, handled by `syncAdmins`
+          'adminIds', // handled specially by `syncAdmins`
         ])
       ),
-      syncAdminId(),
+      syncAdmins(),
       checkStatus(),
       handlePatchLicenseExpiry(),
     ],
