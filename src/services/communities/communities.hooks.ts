@@ -10,7 +10,7 @@ import dayjs from 'dayjs'
 import { HookContext, HookOptions } from '../../declarations'
 import { Communities } from './communities.class'
 
-import { Paginated } from '@feathersjs/feathers'
+import { Id, Paginated } from '@feathersjs/feathers'
 import { UserProject } from '../../models/users-projects.model'
 
 import globalHooks from '../../hooks'
@@ -207,6 +207,18 @@ const syncAdminAfterCreate = () => async (context: HookContext) => {
 // correct relationship is created/updated via the `admins-communities`
 // service.  This hook is purposely run *after* `restrictPatchToFields` so the
 // field is allowed, but before the patch is applied to the community record.
+const normalizeUuid = (value: unknown): string => {
+  if (value == null) {
+    return ''
+  }
+
+  if (typeof value === 'object' && 'id' in value) {
+    return normalizeUuid((value as { id: unknown }).id)
+  }
+
+  return String(value).trim().toLowerCase()
+}
+
 const syncAdminId = () => async (context: HookContext) => {
   const { data, app, id } = context
 
@@ -215,28 +227,38 @@ const syncAdminId = () => async (context: HookContext) => {
   }
 
   // grab the value and remove it from the community payload
-  const adminId = data.adminId
+  const adminId = normalizeUuid(data.adminId)
   delete data.adminId
 
-  // find any existing admin relationship for this community
-  const existing = await app.service('admins-communities').find({
-    query: { community_id: id },
-    paginate: false,
+  const sequelize = app.get('sequelizeClient')
+  const AdminCommunityModel = sequelize.models['admins-communities']
+  const communityId = normalizeUuid(id)
+
+  // Use Sequelize directly so we match the exact row without feathers find/pagination quirks.
+  const existingExact = await AdminCommunityModel.findOne({
+    where: { community_id: communityId, user_id: adminId },
   })
 
-  if (existing.length > 0) {
-    // if the admin is changing we cannot patch the record because the
-    // admins-communities service only allows `is_first_login` to be patched
-    // for external providers.  Instead we remove the old row and create a new
-    // one; doing so triggers the normal after-hooks which keep
-    // users-projects in sync.
-    if (existing[0].user_id !== adminId) {
-      await app.service('admins-communities').remove(existing[0].id)
-      await app.service('admins-communities').create({ community_id: id, user_id: adminId })
-    }
-  } else {
-    await app.service('admins-communities').create({ community_id: id, user_id: adminId })
+  if (existingExact) {
+    return context
   }
+
+  // if the admin is changing we cannot patch the record because the
+  // admins-communities service only allows `is_first_login` to be patched
+  // for external providers.  Instead we remove the old row and create a new
+  // one; doing so triggers the normal after-hooks which keep
+  // users-projects in sync.
+  const existingForCommunity = await AdminCommunityModel.findOne({
+    where: { community_id: communityId },
+  })
+
+  if (existingForCommunity) {
+    await app
+      .service('admins-communities')
+      .remove(normalizeUuid(existingForCommunity.get('id')) as unknown as Id)
+  }
+
+  await app.service('admins-communities').create({ community_id: communityId, user_id: adminId })
 
   return context
 }
